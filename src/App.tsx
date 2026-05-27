@@ -19,6 +19,8 @@ type Game = {
   accent: string
 }
 
+type SpriteStyle = 'wanderer' | 'gardener' | 'climber' | 'detective' | 'camper' | 'fighter'
+
 const STORAGE_KEY = 'offline-game-vault-library'
 
 const seedGames: Game[] = [
@@ -112,6 +114,19 @@ const statusLabels: Record<Status, string> = {
   backlog: 'Backlog',
   completed: 'Completed',
   paused: 'Paused',
+}
+
+function spriteForGame(game: Game): SpriteStyle {
+  const spriteMap: Record<string, SpriteStyle> = {
+    'hollow-knight': 'wanderer',
+    'stardew-valley': 'gardener',
+    celeste: 'climber',
+    'disco-elysium': 'detective',
+    'a-short-hike': 'camper',
+    'dead-cells': 'fighter',
+  }
+
+  return spriteMap[game.id] ?? 'wanderer'
 }
 
 function loadGames() {
@@ -257,10 +272,14 @@ function App() {
 
         <section className="content">
           <article className="featured" style={{ '--accent': playing.accent } as CSSProperties}>
-            <div>
+            <div className="feature-copy">
               <p className="eyebrow">Continue playing</p>
               <h2>{playing.title}</h2>
               <p>{playing.note}</p>
+              <div className="feature-progress">
+                <span>{playing.playtime}h played</span>
+                <strong>Last played {playing.lastPlayed?.toLowerCase()}</strong>
+              </div>
               <div className="feature-actions">
                 <button className="play-button" onClick={() => setPlayNotice(true)}>Play offline</button>
                 <button className="ghost-button" onClick={() => setSelectedId(playing.id)}>
@@ -268,9 +287,8 @@ function App() {
                 </button>
               </div>
             </div>
-            <div className="feature-progress">
-              <span>{playing.playtime}h played</span>
-              <strong>Last played {playing.lastPlayed?.toLowerCase()}</strong>
+            <div className="feature-art">
+              <PixelScene game={playing} />
             </div>
           </article>
 
@@ -324,6 +342,7 @@ function App() {
                 <div className="cover">
                   <span className="badge">{statusLabels[game.status]}</span>
                   {game.favorite && <span className="heart">+ fav</span>}
+                  <PixelAvatar styleName={spriteForGame(game)} accent={game.accent} />
                   <strong>{game.title}</strong>
                 </div>
                 <div className="card-meta">
@@ -341,6 +360,7 @@ function App() {
         {selected && (
           <aside className="details" style={{ '--accent': selected.accent } as CSSProperties}>
             <div className="detail-cover">
+              <PixelScene game={selected} compact />
               <span>{selected.genre}</span>
               <strong>{selected.title}</strong>
             </div>
@@ -428,6 +448,86 @@ function Stat({ value, label }: { value: string | number; label: string }) {
       <strong>{value}</strong>
       <span>{label}</span>
     </div>
+  )
+}
+
+function PixelScene({ game, compact = false }: { game: Game; compact?: boolean }) {
+  return (
+    <svg
+      className={compact ? 'pixel-scene compact' : 'pixel-scene'}
+      viewBox="0 0 192 132"
+      role="img"
+      aria-label={`Original pixel art scene for ${game.title}`}
+      shapeRendering="crispEdges"
+    >
+      <rect width="192" height="132" fill="#101523" />
+      <rect y="94" width="192" height="38" fill="#14101d" />
+      <rect x="0" y="100" width="192" height="4" fill="#29213a" />
+      <rect x="18" y="20" width="46" height="47" fill="#0b101b" />
+      <rect x="22" y="24" width="38" height="34" fill="#15283b" />
+      <rect x="28" y="30" width="4" height="4" fill={game.accent} />
+      <rect x="48" y="38" width="4" height="4" fill="#f9f1ba" />
+      <rect x="37" y="47" width="3" height="3" fill="#fff2be" />
+      <rect x="20" y="67" width="42" height="4" fill="#3c2d3d" />
+      <rect x="126" y="27" width="44" height="66" fill="#1c1928" />
+      <rect x="130" y="34" width="9" height="24" fill={game.accent} />
+      <rect x="142" y="29" width="8" height="29" fill="#fdcf63" />
+      <rect x="153" y="39" width="11" height="19" fill="#ff7699" />
+      <rect x="130" y="61" width="34" height="4" fill="#4c3445" />
+      <rect x="132" y="70" width="18" height="20" fill="#6c3a4e" />
+      <rect x="154" y="75" width="10" height="15" fill="#63dec6" />
+      <rect x="15" y="111" width="156" height="4" fill="#251b32" />
+      <PixelAvatar styleName={spriteForGame(game)} accent={game.accent} scene />
+    </svg>
+  )
+}
+
+function PixelAvatar({
+  styleName,
+  accent,
+  scene = false,
+}: {
+  styleName: SpriteStyle
+  accent: string
+  scene?: boolean
+}) {
+  const hair = styleName === 'gardener' ? '#e7bf59' : styleName === 'climber' ? '#f26a7c' : '#303449'
+  const outfit = styleName === 'detective' ? '#dd9b55' : styleName === 'camper' ? '#7ad790' : accent
+  const accessory =
+    styleName === 'fighter' ? (
+      <rect x="37" y="30" width="3" height="19" fill="#f2e8d2" />
+    ) : styleName === 'gardener' ? (
+      <rect x="10" y="18" width="28" height="4" fill="#edcd62" />
+    ) : styleName === 'wanderer' ? (
+      <>
+        <rect x="13" y="14" width="5" height="10" fill="#eaf1f3" />
+        <rect x="30" y="14" width="5" height="10" fill="#eaf1f3" />
+      </>
+    ) : null
+
+  return (
+    <svg
+      className={scene ? 'pixel-avatar in-scene' : 'pixel-avatar'}
+      x={scene ? 70 : undefined}
+      y={scene ? 40 : undefined}
+      viewBox="0 0 48 64"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+    >
+      {accessory}
+      <rect x="16" y="18" width="17" height="15" fill={hair} />
+      <rect x="13" y="22" width="23" height="8" fill={hair} />
+      <rect x="18" y="24" width="14" height="12" fill="#ffd3a6" />
+      <rect x="20" y="28" width="3" height="3" fill="#161727" />
+      <rect x="28" y="28" width="3" height="3" fill="#161727" />
+      <rect x="16" y="36" width="19" height="16" fill={outfit} />
+      <rect x="12" y="38" width="4" height="11" fill="#ffd3a6" />
+      <rect x="35" y="38" width="4" height="11" fill="#ffd3a6" />
+      <rect x="17" y="52" width="7" height="9" fill="#25263a" />
+      <rect x="28" y="52" width="7" height="9" fill="#25263a" />
+      <rect x="15" y="60" width="10" height="3" fill="#080a12" />
+      <rect x="27" y="60" width="10" height="3" fill="#080a12" />
+    </svg>
   )
 }
 

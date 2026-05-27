@@ -25,12 +25,14 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 13px;
+  border-radius: 3px;
   background: var(--green);
   color: #071314;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -1px;
+  font-family: var(--pixel);
+  box-shadow: 4px 4px 0 #163c40;
 }
 
 .eyebrow,
@@ -40,6 +42,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  font-family: var(--pixel);
 }
 
 .brand h1 {
@@ -189,6 +192,7 @@
     radial-gradient(circle at 85% 35%, color-mix(in srgb, var(--accent) 47%, transparent), transparent 28%),
     linear-gradient(104deg, #171d29 0%, #171b27 43%, #101727 100%);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  image-rendering: pixelated;
 }
 
 .featured::after {
@@ -202,6 +206,7 @@
   color: rgba(255, 255, 255, 0.7);
   font-size: 11px;
   letter-spacing: 0.16em;
+  z-index: 3;
 }
 
 .featured h2 {
@@ -209,6 +214,11 @@
   font-size: 35px;
   line-height: 1;
   letter-spacing: -0.05em;
+}
+
+.feature-copy {
+  position: relative;
+  z-index: 2;
 }
 
 .featured p:not(.eyebrow) {
@@ -219,7 +229,7 @@
 .feature-actions {
   display: flex;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 14px;
 }
 
 .ghost-button {
@@ -232,17 +242,35 @@
 }
 
 .feature-progress {
-  align-self: end;
+  display: flex;
+  gap: 14px;
+  margin-top: 13px;
   color: var(--text-soft);
-  text-align: right;
+  text-align: left;
   font-size: 12px;
   position: relative;
   z-index: 1;
 }
 
-.feature-progress strong {
+.feature-art {
+  position: absolute;
+  right: 54px;
+  bottom: 54px;
+  width: 246px;
+  z-index: 0;
+}
+
+.pixel-scene {
+  width: 100%;
   display: block;
-  margin-top: 6px;
+  border: 4px solid #29283a;
+  box-shadow: 5px 5px 0 rgba(4, 5, 10, 0.7);
+  image-rendering: pixelated;
+}
+
+.feature-progress strong {
+  display: inline;
+  margin-top: 0;
   color: #ebedf4;
   font-size: 13px;
 }
@@ -396,6 +424,7 @@
     radial-gradient(circle at 58% 38%, color-mix(in srgb, var(--accent) 44%, transparent), transparent 27%),
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, #0a0a13), #111321 68%);
   transition: transform 180ms ease, border-color 180ms ease;
+  image-rendering: pixelated;
 }
 
 .game-card:hover .cover,
@@ -427,6 +456,23 @@
   line-height: 1.08;
   font-size: 18px;
   letter-spacing: -0.03em;
+}
+
+.pixel-avatar {
+  position: absolute;
+  width: 58px;
+  height: 78px;
+  top: 51px;
+  left: calc(50% - 29px);
+  filter: drop-shadow(4px 5px 0 rgba(0, 0, 0, 0.34));
+  image-rendering: pixelated;
+}
+
+.pixel-avatar.in-scene {
+  position: static;
+  width: 48px;
+  height: 64px;
+  filter: none;
 }
 
 .card-meta {
@@ -470,18 +516,33 @@
     linear-gradient(12deg, rgba(5, 6, 11, 0.76), transparent 70%),
     radial-gradient(circle at 70% 22%, color-mix(in srgb, var(--accent) 66%, white), transparent 9%),
     linear-gradient(140deg, color-mix(in srgb, var(--accent) 48%, #10121b), #10121a);
+  position: relative;
+  overflow: hidden;
+  image-rendering: pixelated;
 }
 
 .detail-cover span {
   color: color-mix(in srgb, var(--accent) 75%, white);
   font-size: 12px;
   margin-bottom: 8px;
+  z-index: 1;
 }
 
 .detail-cover strong {
   font-size: 29px;
   line-height: 1;
   letter-spacing: -0.05em;
+  z-index: 1;
+}
+
+.detail-cover .pixel-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0.84;
+  box-shadow: none;
 }
 
 .details h2 {
@@ -719,6 +780,13 @@ dt {
 
   .featured h2 {
     font-size: 30px;
+  }
+
+  .feature-art {
+    opacity: 0.22;
+    right: -6px;
+    bottom: 15px;
+    width: 235px;
   }
 
   .stats {
