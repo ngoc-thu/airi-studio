@@ -133,6 +133,7 @@ function App() {
   const [selectedId, setSelectedId] = useState(seedGames[0].id)
   const [randomPick, setRandomPick] = useState<Game | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [playNotice, setPlayNotice] = useState(false)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(games))
@@ -261,7 +262,7 @@ function App() {
               <h2>{playing.title}</h2>
               <p>{playing.note}</p>
               <div className="feature-actions">
-                <button className="play-button">Play offline</button>
+                <button className="play-button" onClick={() => setPlayNotice(true)}>Play offline</button>
                 <button className="ghost-button" onClick={() => setSelectedId(playing.id)}>
                   Details
                 </button>
@@ -406,6 +407,15 @@ function App() {
             <label>Note<textarea name="note" placeholder="Why do you want to play this?" /></label>
             <button className="primary-button submit" type="submit">Add to library</button>
           </form>
+        </div>
+      )}
+      {playNotice && (
+        <div className="toast" role="status">
+          <div>
+            <strong>Web library mode</strong>
+            <p>Launching installed games requires the future desktop companion.</p>
+          </div>
+          <button onClick={() => setPlayNotice(false)}>Dismiss</button>
         </div>
       )}
     </div>

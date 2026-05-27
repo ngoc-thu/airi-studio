@@ -625,6 +625,43 @@ dt {
   margin-top: 5px;
 }
 
+.toast {
+  position: fixed;
+  right: 27px;
+  bottom: 27px;
+  z-index: 20;
+  width: min(392px, calc(100vw - 34px));
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  color: #d9dce6;
+  background: #181b28;
+  border: 1px solid rgba(99, 222, 198, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.toast strong {
+  color: var(--green);
+  font-size: 13px;
+}
+
+.toast p {
+  margin-top: 5px;
+  color: #adb0c0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.toast button {
+  color: #d5d8e2;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+}
+
 @media (max-width: 1200px) {
   .layout {
     grid-template-columns: 190px minmax(480px, 1fr);
@@ -706,5 +743,10 @@ dt {
 
   .details {
     order: 3;
+  }
+
+  .toast {
+    right: 17px;
+    bottom: 17px;
   }
 }
