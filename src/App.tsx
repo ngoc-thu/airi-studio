@@ -49,7 +49,7 @@ type AgentInspect = {
   tick: number
 }
 
-type ZoSessionStatus = 'sending' | 'working' | 'done' | 'failed'
+type ZoSessionStatus = 'pending' | 'sending' | 'working' | 'done' | 'failed'
 
 type ZoInsight = {
   label: string
@@ -168,6 +168,7 @@ const taskLabels: Record<TaskType, string> = {
 }
 
 const zoStatusLabels: Record<ZoSessionStatus, string> = {
+  pending: 'Confirm',
   sending: 'Sending',
   working: 'Working',
   done: 'Done',
@@ -501,23 +502,37 @@ function App() {
         taskLabel: selected.label,
         taskType: selected.type,
         agentId,
-        status: 'sending' as const,
-        output: 'Opening a live Zo Computer session...',
-        summary: `${assignedAgent.name} is preparing ${taskLabels[selected.type]} work.`,
+        status: 'pending' as const,
+        output: 'This task is staged locally. Confirm before sending a real request to Zo Computer.',
+        summary: `${assignedAgent.name} is ready to send ${taskLabels[selected.type]} work to Zo Computer.`,
         insights: [
           { label: 'Pipeline', value: taskLabels[selected.type] },
           { label: 'Agent', value: assignedAgent.name },
-          { label: 'Status', value: 'Queued' },
+          { label: 'Status', value: 'Needs confirm' },
         ],
         actions: roleResultCards[selected.type].sections,
       },
       ...currentSessions.filter((session) => session.taskId !== selected.id),
     ].slice(0, 8))
     setLog((items) => [
-      `${selected.label} assigned to ${assignedAgent.title}. Sending to Zo Computer.`,
+      `${selected.label} assigned to ${assignedAgent.title}. Waiting for Zo confirmation.`,
       ...items,
     ].slice(0, 7))
-    void sendTaskToZo(selected, assignedAgent)
+  }
+
+  function cancelZoTask(session: ZoSession) {
+    setZoSessions((currentSessions) => currentSessions.filter((item) => item.taskId !== session.taskId))
+    setSelectedZoTaskId((current) => (current === session.taskId ? null : current))
+    setLog((items) => [`Zo send cancelled for ${session.taskLabel}.`, ...items].slice(0, 7))
+  }
+
+  function confirmZoTask(session: ZoSession) {
+    const task = tasks.find((item) => item.id === session.taskId)
+    const agent = agents.find((item) => item.id === session.agentId)
+    if (!task || !agent || session.status !== 'pending') return
+
+    setLog((items) => [`Confirmed: sending ${task.label} to Zo Computer.`, ...items].slice(0, 7))
+    void sendTaskToZo(task, agent)
   }
 
   async function sendTaskToZo(task: Task, agent: Agent) {
@@ -995,6 +1010,13 @@ function App() {
                             <li key={`${action}-${index}`}>{action}</li>
                           ))}
                         </ol>
+                      </div>
+                    ) : null}
+
+                    {selectedZoSession.status === 'pending' ? (
+                      <div className="zo-confirm-actions">
+                        <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
+                        <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
                       </div>
                     ) : null}
 

@@ -1063,3 +1063,27 @@ h2 {
     width: 146px;
   }
 }
+
+.zo-status.pending {
+  background: #ffd166;
+}
+
+.zo-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.zo-confirm-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  color: #10141f;
+  background: #6ee7b7;
+  font-weight: 900;
+}
+
+.zo-confirm-actions button:last-child {
+  color: #f7fbff;
+  background: #2a3346;
+}
