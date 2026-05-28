@@ -49,6 +49,18 @@ type AgentInspect = {
   tick: number
 }
 
+type ZoSessionStatus = 'sending' | 'working' | 'done' | 'failed'
+
+type ZoSession = {
+  taskId: number
+  taskLabel: string
+  taskType: TaskType
+  agentId: AgentRole
+  status: ZoSessionStatus
+  output: string
+  conversationId?: string | null
+}
+
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
   inbox: { x: 12, y: 76, label: 'Inbox' },
   library: { x: 21, y: 25, label: 'Research Zone' },
@@ -144,6 +156,13 @@ const taskLabels: Record<TaskType, string> = {
   code: 'Code',
   review: 'Review',
   deploy: 'Deploy',
+}
+
+const zoStatusLabels: Record<ZoSessionStatus, string> = {
+  sending: 'Sending',
+  working: 'Working',
+  done: 'Done',
+  failed: 'Failed',
 }
 
 const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
@@ -297,10 +316,14 @@ function App() {
     'Combo rule: Research -> Code -> Review -> Deploy keeps happiness high.',
   ])
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
+  const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
+  const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(null)
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
   const queuedTasks = tasks.filter((task) => task.state === 'queued')
   const activeTasks = tasks.filter((task) => task.state === 'active')
+  const visibleZoSessions = zoSessions.slice(0, 4)
+  const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
 
   const teamLoad = useMemo(() => {
     return Math.min(100, Math.round((activeTasks.length / agents.length) * 100))
@@ -391,6 +414,8 @@ function App() {
 
   function assignTask(agentId: AgentRole) {
     if (!selected) return
+    const assignedAgent = agents.find((agent) => agent.id === agentId)
+    if (!assignedAgent) return
 
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
@@ -400,10 +425,81 @@ function App() {
       ),
     )
     setSelectedTask(null)
+    setSelectedZoTaskId(selected.id)
+    setZoSessions((currentSessions) => [
+      {
+        taskId: selected.id,
+        taskLabel: selected.label,
+        taskType: selected.type,
+        agentId,
+        status: 'sending' as const,
+        output: 'Opening a live Zo Computer session...',
+      },
+      ...currentSessions.filter((session) => session.taskId !== selected.id),
+    ].slice(0, 8))
     setLog((items) => [
-      `${selected.label} assigned to ${baseAgents.find((agent) => agent.id === agentId)?.title}.`,
+      `${selected.label} assigned to ${assignedAgent.title}. Sending to Zo Computer.`,
       ...items,
     ].slice(0, 7))
+    void sendTaskToZo(selected, assignedAgent)
+  }
+
+  async function sendTaskToZo(task: Task, agent: Agent) {
+    setZoSessions((currentSessions) =>
+      currentSessions.map((session) =>
+        session.taskId === task.id
+          ? { ...session, status: 'working', output: 'Zo accepted the request. Waiting for result...' }
+          : session,
+      ),
+    )
+
+    try {
+      const response = await fetch('/api/zo-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: {
+            id: task.id,
+            label: task.label,
+            type: task.type,
+            difficulty: task.difficulty,
+            reward: task.reward,
+          },
+          agent: {
+            id: agent.id,
+            name: agent.name,
+            title: agent.title,
+          },
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Zo Computer request failed.')
+      }
+
+      setZoSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session.taskId === task.id
+            ? {
+                ...session,
+                status: 'done',
+                output: data?.output ?? 'Zo completed the task.',
+                conversationId: data?.conversationId ?? null,
+              }
+            : session,
+        ),
+      )
+      setLog((items) => [`Zo returned a result for ${task.label}.`, ...items].slice(0, 7))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Zo Computer request failed.'
+      setZoSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session.taskId === task.id ? { ...session, status: 'failed', output: message } : session,
+        ),
+      )
+      setLog((items) => [`Zo Computer failed for ${task.label}: ${message}`, ...items].slice(0, 7))
+    }
   }
 
   function spawnTask() {
@@ -423,6 +519,8 @@ function App() {
     setTasks(makeInitialTasks())
     setNextTaskId((id) => id + 8)
     setSelectedTask(null)
+    setSelectedZoTaskId(null)
+    setZoSessions([])
     setLog((items) => [`Day ${metrics.day + 1} planning started. Token budget refreshed.`, ...items].slice(0, 7))
   }
 
@@ -575,6 +673,29 @@ function App() {
               <span>{station.label}</span>
             </div>
           ))}
+          <button
+            className={[
+              'zoo-computer',
+              zoSessions.some((session) => session.status === 'sending' || session.status === 'working')
+                ? 'online'
+                : '',
+            ].filter(Boolean).join(' ')}
+            onClick={() => setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)}
+            style={
+              {
+                '--zoo-color': selectedZoSession
+                  ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
+                  : '#79e7c5',
+              } as React.CSSProperties
+            }
+            title="Open Zoo Computer sessions"
+          >
+            <span className="zoo-screen">
+              <strong>ZO</strong>
+              <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
+            </span>
+            <span className="zoo-keyboard" />
+          </button>
 
           {agents.map((agent, index) => {
             const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
@@ -702,6 +823,52 @@ function App() {
                 </button>
               </article>
             ))}
+          </div>
+
+          <div className="zoo-panel">
+            <div className="panel-head compact">
+              <div>
+                <p className="eyebrow">Live Control</p>
+                <h2>Zoo Computer</h2>
+              </div>
+              <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
+                {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
+              </span>
+            </div>
+
+            {visibleZoSessions.length ? (
+              <>
+                <div className="zo-session-list">
+                  {visibleZoSessions.map((session) => {
+                    const agent = agents.find((item) => item.id === session.agentId)
+
+                    return (
+                      <button
+                        className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
+                        key={session.taskId}
+                        onClick={() => setSelectedZoTaskId(session.taskId)}
+                        style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
+                      >
+                        <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
+                        <strong>{session.taskLabel}</strong>
+                        <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {selectedZoSession ? (
+                  <div className="zo-output">
+                    <p>{selectedZoSession.output}</p>
+                    {selectedZoSession.conversationId ? (
+                      <small>Conversation {selectedZoSession.conversationId}</small>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="zo-empty">Assign a task to send real work through Zo.</p>
+            )}
           </div>
 
           <div className="log-box">

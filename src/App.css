@@ -134,6 +134,10 @@ h2 {
   margin-bottom: 14px;
 }
 
+.panel-head.compact {
+  margin-bottom: 10px;
+}
+
 .icon-button {
   width: 38px;
   height: 38px;
@@ -370,6 +374,105 @@ h2 {
 
 .station.inbox::before {
   background: #375071;
+}
+
+.zoo-computer {
+  --zoo-color: #79e7c5;
+  position: absolute;
+  left: 56%;
+  top: 47%;
+  width: 96px;
+  height: 76px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 4;
+}
+
+.zoo-computer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  width: 76px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(5, 8, 15, 0.28);
+}
+
+.zoo-screen {
+  position: relative;
+  width: 70px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  border: 5px solid #243041;
+  border-bottom-width: 8px;
+  border-radius: 4px;
+  color: #eafff8;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 5px),
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--zoo-color) 36%, transparent), transparent 58%),
+    #132337;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 8px 0 rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.zoo-screen::after {
+  content: "";
+  position: absolute;
+  inset: -10px 0;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.18), transparent);
+  opacity: 0.42;
+  transform: translateY(-100%);
+  animation: zoo-scan 1.8s linear infinite;
+}
+
+.zoo-screen strong,
+.zoo-screen small {
+  position: relative;
+  z-index: 1;
+  font-family: var(--pixel);
+}
+
+.zoo-screen strong {
+  font-size: 16px;
+}
+
+.zoo-screen small {
+  color: var(--zoo-color);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.zoo-keyboard {
+  position: relative;
+  width: 74px;
+  height: 16px;
+  margin-top: -1px;
+  border: 3px solid #243041;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 2px, transparent 2px 7px),
+    #46556d;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.zoo-computer.online .zoo-screen {
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 8px 0 rgba(0, 0, 0, 0.2),
+    0 0 18px color-mix(in srgb, var(--zoo-color) 72%, transparent);
+  animation: zoo-online 0.9s steps(3) infinite;
 }
 
 .agent {
@@ -645,6 +748,18 @@ h2 {
   }
 }
 
+@keyframes zoo-scan {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes zoo-online {
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
 .work-bubble {
   position: absolute;
   width: 168px;
@@ -733,6 +848,90 @@ h2 {
 .agent-card button {
   height: 34px;
   background: var(--agent-color);
+}
+
+.zoo-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.zo-status {
+  padding: 7px 9px;
+  border-radius: 999px;
+  color: #10141f;
+  background: #d9f99d;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.zo-status.sending,
+.zo-status.working {
+  background: #5dd6ff;
+}
+
+.zo-status.failed {
+  background: #ff7c92;
+}
+
+.zo-session-list {
+  display: grid;
+  gap: 8px;
+}
+
+.zo-session-list button {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid var(--agent-color);
+  border-radius: 6px;
+  color: #f7fbff;
+  background: #171d2a;
+  text-align: left;
+}
+
+.zo-session-list button.selected {
+  border-color: color-mix(in srgb, var(--agent-color) 72%, #ffffff);
+  background: #1b2634;
+}
+
+.zo-session-list strong {
+  line-height: 1.22;
+}
+
+.zo-session-list small,
+.zo-output small,
+.zo-empty {
+  color: #8d98aa;
+  font-size: 11px;
+}
+
+.zo-output {
+  max-height: 168px;
+  margin-top: 10px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 6px;
+  color: #cbd5e1;
+  background: rgba(9, 13, 22, 0.58);
+  line-height: 1.45;
+}
+
+.zo-output p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.zo-output small {
+  display: block;
+  margin-top: 8px;
+}
+
+.zo-empty {
+  margin: 0;
+  line-height: 1.45;
 }
 
 .log-box {
