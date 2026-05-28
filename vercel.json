@@ -1,9 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/zo-task.js": {
-      "runtime": "@vercel/node@5.3.24"
-    }
-  }
+  "outputDirectory": "dist"
 }
