@@ -158,10 +158,8 @@ const workingRows: Record<TaskType, number> = {
 const hallwayRoutes: Record<AgentRole, Point[]> = {
   research: [
     { x: 12, y: 76 },
-    { x: 31, y: 76 },
-    { x: 35, y: 66 },
-    { x: 35, y: 41 },
-    { x: 26, y: 36 },
+    { x: 16, y: 62 },
+    { x: 20, y: 48 },
   ],
   code: [
     { x: 12, y: 76 },
