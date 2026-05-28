@@ -39,6 +39,11 @@ type Metrics = {
   credits: number
 }
 
+type Point = {
+  x: number
+  y: number
+}
+
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
   inbox: { x: 12, y: 76, label: 'Inbox' },
   library: { x: 21, y: 25, label: 'Research Zone' },
@@ -137,7 +142,7 @@ const taskLabels: Record<TaskType, string> = {
 }
 
 const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
-  research: { x: -1, y: 5 },
+  research: { x: -1, y: 12 },
   code: { x: 0, y: 9 },
   review: { x: 0, y: 8 },
   deploy: { x: -2, y: 0 },
@@ -148,6 +153,36 @@ const workingRows: Record<TaskType, number> = {
   code: 7,
   review: 8,
   deploy: 7,
+}
+
+const hallwayRoutes: Record<AgentRole, Point[]> = {
+  research: [
+    { x: 12, y: 76 },
+    { x: 31, y: 76 },
+    { x: 35, y: 66 },
+    { x: 35, y: 41 },
+    { x: 26, y: 36 },
+  ],
+  code: [
+    { x: 12, y: 76 },
+    { x: 34, y: 76 },
+    { x: 38, y: 66 },
+    { x: 50, y: 62 },
+  ],
+  review: [
+    { x: 12, y: 76 },
+    { x: 34, y: 76 },
+    { x: 38, y: 66 },
+    { x: 69, y: 66 },
+    { x: 73, y: 45 },
+    { x: 79, y: 38 },
+  ],
+  deploy: [
+    { x: 12, y: 76 },
+    { x: 34, y: 76 },
+    { x: 60, y: 76 },
+    { x: 76, y: 74 },
+  ],
 }
 
 function createTask(id: number): Task {
@@ -170,11 +205,46 @@ function makeInitialTasks() {
   return Array.from({ length: 8 }, (_, index) => createTask(index + 1))
 }
 
-function getAgentPosition(agent: Agent, task?: Task) {
+function getRoute(agent: Agent) {
   const offset = agentOffsets[agent.id]
   const target = stationPositions[agent.station]
-  const targetX = target.x + offset.x
-  const targetY = target.y + offset.y
+  const targetPoint = { x: target.x + offset.x, y: target.y + offset.y }
+  const route = hallwayRoutes[agent.id] ?? [stationPositions.inbox]
+
+  return [...route.slice(0, -1), targetPoint]
+}
+
+function interpolateRoute(route: Point[], percent: number) {
+  const segments = route.slice(1).map((point, index) => {
+    const start = route[index]
+    const distance = Math.hypot(point.x - start.x, point.y - start.y)
+    return { start, end: point, distance }
+  })
+  const totalDistance = segments.reduce((total, segment) => total + segment.distance, 0)
+  let remainingDistance = totalDistance * percent
+
+  for (const segment of segments) {
+    if (remainingDistance <= segment.distance) {
+      const segmentPercent = segment.distance ? remainingDistance / segment.distance : 1
+      return {
+        x: segment.start.x + (segment.end.x - segment.start.x) * segmentPercent,
+        y: segment.start.y + (segment.end.y - segment.start.y) * segmentPercent,
+        directionX: segment.end.x - segment.start.x,
+      }
+    }
+
+    remainingDistance -= segment.distance
+  }
+
+  const last = route.at(-1) ?? stationPositions.inbox
+  return { x: last.x, y: last.y, directionX: 1 }
+}
+
+function getAgentPosition(agent: Agent, task?: Task) {
+  const route = getRoute(agent)
+  const target = route.at(-1) ?? stationPositions.inbox
+  const targetX = target.x
+  const targetY = target.y
 
   if (!task) {
     return {
@@ -182,25 +252,25 @@ function getAgentPosition(agent: Agent, task?: Task) {
       y: targetY,
       targetX,
       targetY,
+      route,
       walking: false,
       animationRow: 0,
       phase: 'Idle',
     }
   }
 
-  const inbox = stationPositions.inbox
   const workPercent = Math.min(1, task.progress / task.difficulty)
   const travelPercent = Math.min(1, workPercent / 0.35)
-  const x = inbox.x + (targetX - inbox.x) * travelPercent
-  const y = inbox.y + (targetY - inbox.y) * travelPercent
+  const current = interpolateRoute(route, travelPercent)
 
   return {
-    x,
-    y,
+    x: current.x,
+    y: current.y,
     targetX,
     targetY,
+    route,
     walking: travelPercent < 1,
-    animationRow: travelPercent < 1 ? (targetX >= inbox.x ? 1 : 2) : workingRows[task.type],
+    animationRow: travelPercent < 1 ? (current.directionX >= 0 ? 1 : 2) : workingRows[task.type],
     travelPercent,
     phase: travelPercent < 1 ? 'Moving' : 'Working',
   }
@@ -427,12 +497,9 @@ function App() {
               const position = getAgentPosition(agent, task)
 
               return (
-                <line
+                <polyline
                   key={task.id}
-                  x1={stationPositions.inbox.x}
-                  y1={stationPositions.inbox.y}
-                  x2={position.targetX}
-                  y2={position.targetY}
+                  points={position.route.map((point) => `${point.x},${point.y}`).join(' ')}
                   style={{ '--agent-color': agent.color } as React.CSSProperties}
                 />
               )

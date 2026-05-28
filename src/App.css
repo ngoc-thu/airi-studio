@@ -284,11 +284,13 @@ h2 {
   pointer-events: none;
 }
 
-.movement-routes line {
+.movement-routes polyline {
+  fill: none;
   stroke: var(--agent-color);
   stroke-width: 0.38;
   stroke-dasharray: 1.2 1.7;
   stroke-linecap: round;
+  stroke-linejoin: round;
   opacity: 0.58;
   filter: drop-shadow(0 1px 0 rgba(5, 10, 18, 0.36));
   animation: route-flow 0.7s linear infinite;
