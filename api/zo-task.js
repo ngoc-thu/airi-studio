@@ -1,8 +1,8 @@
 const roleInstructions = {
-  research: 'Research the request, identify useful sources or constraints, and return a concise plan.',
+  research: 'Research the request, identify useful sources, constraints, and unknowns. Return concise findings only.',
+  plan: 'Turn the research/request into a concrete implementation plan with ordered steps, files, checks, and risks.',
   code: 'Implement or describe the code changes needed, including important files and risks.',
-  review: 'Review the task for bugs, regressions, edge cases, and missing verification.',
-  deploy: 'Prepare deployment or operations steps, including checks and rollback notes.',
+  review: 'Review the completed work for bugs, regressions, edge cases, and missing verification.',
 }
 
 function sendJson(response, statusCode, body) {

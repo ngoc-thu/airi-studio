@@ -184,16 +184,16 @@ h2 {
   background: #5dd6ff;
 }
 
+.task-type.plan {
+  background: #ff7aa8;
+}
+
 .task-type.code {
   background: #7cf28a;
 }
 
 .task-type.review {
   background: #ffd166;
-}
-
-.task-type.deploy {
-  background: #ff7aa8;
 }
 
 .assignment-box {
@@ -360,16 +360,16 @@ h2 {
   background: #79e7c5;
 }
 
+.station.planning::before {
+  background: #ff7aa8;
+}
+
 .station.terminal::before {
-  background: #ff7c92;
+  background: #7cf28a;
 }
 
 .station.review::before {
   background: #ffd166;
-}
-
-.station.server::before {
-  background: #4edde2;
 }
 
 .station.inbox::before {

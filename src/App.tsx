@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-type AgentRole = 'research' | 'code' | 'review' | 'deploy'
-type StationId = 'inbox' | 'library' | 'terminal' | 'review' | 'server'
+type AgentRole = 'research' | 'plan' | 'code' | 'review'
+type StationId = 'inbox' | 'library' | 'planning' | 'terminal' | 'review'
 type TaskType = AgentRole
 type TaskState = 'queued' | 'active' | 'done' | 'failed'
 
@@ -64,9 +64,9 @@ type ZoSession = {
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
   inbox: { x: 12, y: 76, label: 'Inbox' },
   library: { x: 21, y: 25, label: 'Research Zone' },
-  terminal: { x: 50, y: 53, label: 'Code Zone' },
-  review: { x: 79, y: 30, label: 'Review Zone' },
-  server: { x: 83, y: 72, label: 'Deploy Zone' },
+  planning: { x: 39, y: 70, label: 'Plan Zone' },
+  terminal: { x: 55, y: 62, label: 'Code Zone' },
+  review: { x: 79, y: 38, label: 'Review Zone' },
 }
 
 const furniture = [
@@ -87,10 +87,10 @@ const furniture = [
   { src: '/furniture/chair-orange.png', x: 52, y: 58, w: 34, label: 'Code chair' },
   { src: '/furniture/green-board.png', x: 79, y: 18, w: 102, label: 'Review board' },
   { src: '/furniture/table-orange.png', x: 80, y: 32, w: 58, label: 'Review desk' },
-  { src: '/furniture/cabinet.png', x: 88, y: 77, w: 70, label: 'Deploy rack' },
-  { src: '/furniture/screen-wide.png', x: 78, y: 78, w: 50, label: 'Deploy status screen' },
-  { src: '/furniture/server-small.png', x: 83, y: 66, w: 42, label: 'Deploy node' },
-  { src: '/furniture/terminal.png', x: 76, y: 70, w: 36, label: 'Deploy terminal' },
+  { src: '/furniture/cabinet.png', x: 88, y: 77, w: 70, label: 'Review rack' },
+  { src: '/furniture/screen-wide.png', x: 78, y: 78, w: 50, label: 'Review status screen' },
+  { src: '/furniture/server-small.png', x: 83, y: 66, w: 42, label: 'Review node' },
+  { src: '/furniture/terminal.png', x: 76, y: 70, w: 36, label: 'Review terminal' },
 ] as const
 
 const baseAgents: Agent[] = [
@@ -105,6 +105,18 @@ const baseAgents: Agent[] = [
     color: '#5dd6ff',
     pet: '/pets/enana.webp',
     petCredit: 'Enana by Codex-Pets.net',
+  },
+  {
+    id: 'plan',
+    name: 'Ace Taffy',
+    title: 'Planner',
+    station: 'planning',
+    speed: 1,
+    accuracy: 86,
+    focus: 84,
+    color: '#ff7aa8',
+    pet: '/pets/ace-taffy.webp',
+    petCredit: 'Ace Taffy by CodexPets.net',
   },
   {
     id: 'code',
@@ -130,32 +142,20 @@ const baseAgents: Agent[] = [
     pet: '/pets/azuma.webp',
     petCredit: 'Azuma by CodexPets.net',
   },
-  {
-    id: 'deploy',
-    name: 'Ace Taffy',
-    title: 'DevOps',
-    station: 'server',
-    speed: 1,
-    accuracy: 86,
-    focus: 84,
-    color: '#ff7aa8',
-    pet: '/pets/ace-taffy.webp',
-    petCredit: 'Ace Taffy by CodexPets.net',
-  },
 ]
 
 const taskTemplates: Record<TaskType, string[]> = {
   research: ['Map unknown API', 'Collect source notes', 'Compare model tradeoffs', 'Summarize user brief'],
+  plan: ['Draft implementation plan', 'Break down feature steps', 'Design work sequence', 'Estimate task scope'],
   code: ['Build feature slice', 'Patch UI bug', 'Wire game state', 'Refactor task loop'],
   review: ['Catch regression', 'Audit edge cases', 'Review pull request', 'Test release path'],
-  deploy: ['Ship preview build', 'Fix broken pipeline', 'Scale token queue', 'Restore production'],
 }
 
 const taskLabels: Record<TaskType, string> = {
   research: 'Research',
+  plan: 'Plan',
   code: 'Code',
   review: 'Review',
-  deploy: 'Deploy',
 }
 
 const zoStatusLabels: Record<ZoSessionStatus, string> = {
@@ -167,16 +167,16 @@ const zoStatusLabels: Record<ZoSessionStatus, string> = {
 
 const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
   research: { x: -1, y: 12 },
-  code: { x: 0, y: 9 },
+  plan: { x: -1, y: 6 },
+  code: { x: 0, y: 7 },
   review: { x: 0, y: 8 },
-  deploy: { x: -2, y: 0 },
 }
 
 const workingRows: Record<TaskType, number> = {
   research: 6,
+  plan: 6,
   code: 7,
   review: 8,
-  deploy: 7,
 }
 
 const hallwayRoutes: Record<AgentRole, Point[]> = {
@@ -185,11 +185,16 @@ const hallwayRoutes: Record<AgentRole, Point[]> = {
     { x: 16, y: 62 },
     { x: 20, y: 48 },
   ],
+  plan: [
+    { x: 12, y: 76 },
+    { x: 26, y: 76 },
+    { x: 36, y: 76 },
+  ],
   code: [
     { x: 12, y: 76 },
     { x: 34, y: 76 },
-    { x: 38, y: 66 },
-    { x: 50, y: 62 },
+    { x: 44, y: 70 },
+    { x: 55, y: 69 },
   ],
   review: [
     { x: 12, y: 76 },
@@ -199,16 +204,10 @@ const hallwayRoutes: Record<AgentRole, Point[]> = {
     { x: 73, y: 45 },
     { x: 79, y: 38 },
   ],
-  deploy: [
-    { x: 12, y: 76 },
-    { x: 34, y: 76 },
-    { x: 60, y: 76 },
-    { x: 76, y: 74 },
-  ],
 }
 
 function createTask(id: number): Task {
-  const types: TaskType[] = ['research', 'code', 'review', 'deploy']
+  const types: TaskType[] = ['research', 'plan', 'code', 'review']
   const type = types[Math.floor(Math.random() * types.length)]
   const templates = taskTemplates[type]
 
@@ -313,7 +312,7 @@ function App() {
   })
   const [log, setLog] = useState<string[]>([
     'Day 1 started. Assign queued work to the right agent.',
-    'Combo rule: Research -> Code -> Review -> Deploy keeps happiness high.',
+    'Pipeline: Research -> Plan -> Code -> Review keeps work clean.',
   ])
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
