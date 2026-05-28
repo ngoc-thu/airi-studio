@@ -1,0 +1,22 @@
+[
+  {
+    "id": "enana",
+    "spritesheet": "/pets/enana.webp",
+    "source": "https://codex-pets.net/assets/pets/v/1779785822303/enana/spritesheet.webp"
+  },
+  {
+    "id": "chappy-chan",
+    "spritesheet": "/pets/chappy-chan.webp",
+    "source": "https://codex-pets.net/assets/pets/v/1779577039125/chappy-chan/spritesheet.webp"
+  },
+  {
+    "id": "azuma",
+    "spritesheet": "/pets/azuma.webp",
+    "source": "https://pub-4976a79db284484f8d370de741d18cf9.r2.dev/codex-pets/imported/codex-pet-share/azuma/spritesheet.webp"
+  },
+  {
+    "id": "ace-taffy",
+    "spritesheet": "/pets/ace-taffy.webp",
+    "source": "https://pub-4976a79db284484f8d370de741d18cf9.r2.dev/codex-pets/imported/codex-pet-share/ace-taffy/spritesheet.webp"
+  }
+]

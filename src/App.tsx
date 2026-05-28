@@ -1,533 +1,614 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CSSProperties, FormEvent } from 'react'
 import './App.css'
 
-type Status = 'playing' | 'backlog' | 'completed' | 'paused'
+type AgentRole = 'research' | 'code' | 'review' | 'deploy'
+type StationId = 'inbox' | 'library' | 'terminal' | 'review' | 'server'
+type TaskType = AgentRole
+type TaskState = 'queued' | 'active' | 'done' | 'failed'
 
-type Game = {
-  id: string
+type Agent = {
+  id: AgentRole
+  name: string
   title: string
-  subtitle: string
-  genre: string
-  mood: string[]
-  status: Status
-  playtime: number
-  rating: number
-  favorite: boolean
-  note: string
-  lastPlayed?: string
-  accent: string
+  station: StationId
+  speed: number
+  accuracy: number
+  focus: number
+  color: string
+  pet: string
+  petCredit: string
 }
 
-type SpriteStyle = 'wanderer' | 'gardener' | 'climber' | 'detective' | 'camper' | 'fighter'
+type Task = {
+  id: number
+  label: string
+  type: TaskType
+  difficulty: number
+  reward: number
+  state: TaskState
+  assignedTo?: AgentRole
+  progress: number
+}
 
-const STORAGE_KEY = 'offline-game-vault-library'
+type Metrics = {
+  day: number
+  done: number
+  failed: number
+  tokens: number
+  happiness: number
+  credits: number
+}
 
-const seedGames: Game[] = [
+const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
+  inbox: { x: 12, y: 76, label: 'Inbox' },
+  library: { x: 21, y: 25, label: 'Research Zone' },
+  terminal: { x: 50, y: 53, label: 'Code Zone' },
+  review: { x: 79, y: 30, label: 'Review Zone' },
+  server: { x: 83, y: 72, label: 'Deploy Zone' },
+}
+
+const furniture = [
+  { src: '/furniture/table-orange.png', x: 20, y: 28, w: 92, label: 'Research command desk' },
+  { src: '/furniture/monitor-desk.png', x: 17, y: 25, w: 72, label: 'Research left monitor' },
+  { src: '/furniture/monitor-desk.png', x: 23, y: 25, w: 72, label: 'Research right monitor' },
+  { src: '/furniture/board-wide.png', x: 17, y: 14, w: 82, label: 'Research planning board' },
+  { src: '/furniture/bookshelf.png', x: 30, y: 18, w: 48, label: 'Research books' },
+  { src: '/furniture/bookshelf-tall.png', x: 6, y: 80, w: 44, label: 'Lounge shelf' },
+  { src: '/furniture/couch-blue.png', x: 16, y: 79, w: 86, label: 'Lounge couch' },
+  { src: '/furniture/table-orange.png', x: 23, y: 84, w: 42, label: 'Lounge coffee table' },
+  { src: '/furniture/work-desk.png', x: 53, y: 49, w: 126, label: 'Code command desk' },
+  { src: '/furniture/terminal.png', x: 51, y: 45, w: 76, label: 'Code main terminal' },
+  { src: '/furniture/screen-wide.png', x: 44, y: 48, w: 60, label: 'Code left screen' },
+  { src: '/furniture/screen-wide.png', x: 61, y: 48, w: 60, label: 'Code right screen' },
+  { src: '/furniture/server-small.png', x: 39, y: 50, w: 44, label: 'Code server stack A' },
+  { src: '/furniture/server-small.png', x: 43, y: 50, w: 44, label: 'Code server stack B' },
+  { src: '/furniture/chair-orange.png', x: 52, y: 58, w: 34, label: 'Code chair' },
+  { src: '/furniture/green-board.png', x: 79, y: 18, w: 102, label: 'Review board' },
+  { src: '/furniture/table-orange.png', x: 80, y: 32, w: 58, label: 'Review desk' },
+  { src: '/furniture/cabinet.png', x: 88, y: 77, w: 70, label: 'Deploy rack' },
+  { src: '/furniture/screen-wide.png', x: 78, y: 78, w: 50, label: 'Deploy status screen' },
+  { src: '/furniture/server-small.png', x: 83, y: 66, w: 42, label: 'Deploy node' },
+  { src: '/furniture/terminal.png', x: 76, y: 70, w: 36, label: 'Deploy terminal' },
+] as const
+
+const baseAgents: Agent[] = [
   {
-    id: 'hollow-knight',
-    title: 'Hollow Knight',
-    subtitle: 'Hallownest calls again',
-    genre: 'Metroidvania',
-    mood: ['story', 'challenge'],
-    status: 'playing',
-    playtime: 21,
-    rating: 5,
-    favorite: true,
-    note: 'Explore Crystal Peak next. Controller recommended.',
-    lastPlayed: 'Today',
-    accent: '#72c9dd',
+    id: 'research',
+    name: 'Enana',
+    title: 'Researcher',
+    station: 'library',
+    speed: 1.05,
+    accuracy: 88,
+    focus: 92,
+    color: '#5dd6ff',
+    pet: '/pets/enana.webp',
+    petCredit: 'Enana by Codex-Pets.net',
   },
   {
-    id: 'stardew-valley',
-    title: 'Stardew Valley',
-    subtitle: 'Autumn farm save',
-    genre: 'Cozy sim',
-    mood: ['chill', 'short'],
-    status: 'playing',
-    playtime: 64,
-    rating: 5,
-    favorite: true,
-    note: 'Upgrade the barn before winter.',
-    lastPlayed: 'Yesterday',
-    accent: '#65d391',
+    id: 'code',
+    name: 'Chappy',
+    title: 'Coder',
+    station: 'terminal',
+    speed: 1.18,
+    accuracy: 82,
+    focus: 86,
+    color: '#7cf28a',
+    pet: '/pets/chappy-chan.webp',
+    petCredit: 'Chappy-chan by Codex-Pets.net',
   },
   {
-    id: 'celeste',
-    title: 'Celeste',
-    subtitle: 'Climb one more screen',
-    genre: 'Platformer',
-    mood: ['challenge', 'short'],
-    status: 'backlog',
-    playtime: 0,
-    rating: 0,
-    favorite: false,
-    note: 'Great candidate for a short weekend run.',
-    accent: '#ff7190',
+    id: 'review',
+    name: 'Azuma',
+    title: 'Reviewer',
+    station: 'review',
+    speed: 0.92,
+    accuracy: 94,
+    focus: 90,
+    color: '#ffd166',
+    pet: '/pets/azuma.webp',
+    petCredit: 'Azuma by CodexPets.net',
   },
   {
-    id: 'disco-elysium',
-    title: 'Disco Elysium',
-    subtitle: 'The case is waiting',
-    genre: 'Narrative RPG',
-    mood: ['story'],
-    status: 'paused',
-    playtime: 12,
-    rating: 4,
-    favorite: false,
-    note: 'Resume after reading the investigation log.',
-    lastPlayed: '12 days ago',
-    accent: '#f29957',
-  },
-  {
-    id: 'a-short-hike',
-    title: 'A Short Hike',
-    subtitle: 'A quiet evening escape',
-    genre: 'Adventure',
-    mood: ['chill', 'short'],
-    status: 'completed',
-    playtime: 3,
-    rating: 5,
-    favorite: true,
-    note: 'Finished. Perfect comfort replay.',
-    lastPlayed: 'Last month',
-    accent: '#ffc857',
-  },
-  {
-    id: 'dead-cells',
-    title: 'Dead Cells',
-    subtitle: 'One quick run',
-    genre: 'Roguelite',
-    mood: ['action', 'challenge'],
-    status: 'backlog',
-    playtime: 4,
-    rating: 0,
-    favorite: false,
-    note: 'Try with the custom mode unlocks.',
-    accent: '#b975ff',
+    id: 'deploy',
+    name: 'Ace Taffy',
+    title: 'DevOps',
+    station: 'server',
+    speed: 1,
+    accuracy: 86,
+    focus: 84,
+    color: '#ff7aa8',
+    pet: '/pets/ace-taffy.webp',
+    petCredit: 'Ace Taffy by CodexPets.net',
   },
 ]
 
-const moods = ['all', 'chill', 'story', 'action', 'challenge', 'short'] as const
-const statusLabels: Record<Status, string> = {
-  playing: 'Playing',
-  backlog: 'Backlog',
-  completed: 'Completed',
-  paused: 'Paused',
+const taskTemplates: Record<TaskType, string[]> = {
+  research: ['Map unknown API', 'Collect source notes', 'Compare model tradeoffs', 'Summarize user brief'],
+  code: ['Build feature slice', 'Patch UI bug', 'Wire game state', 'Refactor task loop'],
+  review: ['Catch regression', 'Audit edge cases', 'Review pull request', 'Test release path'],
+  deploy: ['Ship preview build', 'Fix broken pipeline', 'Scale token queue', 'Restore production'],
 }
 
-function spriteForGame(game: Game): SpriteStyle {
-  const spriteMap: Record<string, SpriteStyle> = {
-    'hollow-knight': 'wanderer',
-    'stardew-valley': 'gardener',
-    celeste: 'climber',
-    'disco-elysium': 'detective',
-    'a-short-hike': 'camper',
-    'dead-cells': 'fighter',
+const taskLabels: Record<TaskType, string> = {
+  research: 'Research',
+  code: 'Code',
+  review: 'Review',
+  deploy: 'Deploy',
+}
+
+const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
+  research: { x: -1, y: 5 },
+  code: { x: 0, y: 9 },
+  review: { x: 0, y: 8 },
+  deploy: { x: -2, y: 0 },
+}
+
+const workingRows: Record<TaskType, number> = {
+  research: 6,
+  code: 7,
+  review: 8,
+  deploy: 7,
+}
+
+function createTask(id: number): Task {
+  const types: TaskType[] = ['research', 'code', 'review', 'deploy']
+  const type = types[Math.floor(Math.random() * types.length)]
+  const templates = taskTemplates[type]
+
+  return {
+    id,
+    label: templates[Math.floor(Math.random() * templates.length)],
+    type,
+    difficulty: 45 + Math.floor(Math.random() * 46),
+    reward: 8 + Math.floor(Math.random() * 10),
+    state: 'queued',
+    progress: 0,
+  }
+}
+
+function makeInitialTasks() {
+  return Array.from({ length: 8 }, (_, index) => createTask(index + 1))
+}
+
+function getAgentPosition(agent: Agent, task?: Task) {
+  const offset = agentOffsets[agent.id]
+  const target = stationPositions[agent.station]
+  const targetX = target.x + offset.x
+  const targetY = target.y + offset.y
+
+  if (!task) {
+    return {
+      x: targetX,
+      y: targetY,
+      targetX,
+      targetY,
+      walking: false,
+      animationRow: 0,
+      phase: 'Idle',
+    }
   }
 
-  return spriteMap[game.id] ?? 'wanderer'
-}
+  const inbox = stationPositions.inbox
+  const workPercent = Math.min(1, task.progress / task.difficulty)
+  const travelPercent = Math.min(1, workPercent / 0.35)
+  const x = inbox.x + (targetX - inbox.x) * travelPercent
+  const y = inbox.y + (targetY - inbox.y) * travelPercent
 
-function loadGames() {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (!saved) return seedGames
-
-  try {
-    return JSON.parse(saved) as Game[]
-  } catch {
-    return seedGames
+  return {
+    x,
+    y,
+    targetX,
+    targetY,
+    walking: travelPercent < 1,
+    animationRow: travelPercent < 1 ? (targetX >= inbox.x ? 1 : 2) : workingRows[task.type],
+    travelPercent,
+    phase: travelPercent < 1 ? 'Moving' : 'Working',
   }
 }
 
 function App() {
-  const [games, setGames] = useState<Game[]>(loadGames)
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<Status | 'all'>('all')
-  const [mood, setMood] = useState<(typeof moods)[number]>('all')
-  const [selectedId, setSelectedId] = useState(seedGames[0].id)
-  const [randomPick, setRandomPick] = useState<Game | null>(null)
-  const [formOpen, setFormOpen] = useState(false)
-  const [playNotice, setPlayNotice] = useState(false)
+  const [agents, setAgents] = useState(baseAgents)
+  const [tasks, setTasks] = useState(makeInitialTasks)
+  const [selectedTask, setSelectedTask] = useState<number | null>(1)
+  const [nextTaskId, setNextTaskId] = useState(9)
+  const [metrics, setMetrics] = useState<Metrics>({
+    day: 1,
+    done: 0,
+    failed: 0,
+    tokens: 320,
+    happiness: 72,
+    credits: 18,
+  })
+  const [log, setLog] = useState<string[]>([
+    'Day 1 started. Assign queued work to the right agent.',
+    'Combo rule: Research -> Code -> Review -> Deploy keeps happiness high.',
+  ])
+
+  const selected = tasks.find((task) => task.id === selectedTask) ?? null
+  const queuedTasks = tasks.filter((task) => task.state === 'queued')
+  const activeTasks = tasks.filter((task) => task.state === 'active')
+
+  const teamLoad = useMemo(() => {
+    return Math.min(100, Math.round((activeTasks.length / agents.length) * 100))
+  }, [activeTasks.length, agents.length])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(games))
-  }, [games])
+    const timer = window.setInterval(() => {
+      setTasks((currentTasks) => {
+        let completed: Task[] = []
+        let failed: Task[] = []
 
-  const filteredGames = useMemo(() => {
-    const term = query.trim().toLowerCase()
-    return games.filter((game) => {
-      const matchesQuery =
-        !term ||
-        `${game.title} ${game.genre} ${game.note}`.toLowerCase().includes(term)
-      const matchesStatus = status === 'all' || game.status === status
-      const matchesMood = mood === 'all' || game.mood.includes(mood)
-      return matchesQuery && matchesStatus && matchesMood
-    })
-  }, [games, mood, query, status])
+        const updated = currentTasks
+          .map((task) => {
+            if (task.state !== 'active' || !task.assignedTo) return task
+            const agent = agents.find((item) => item.id === task.assignedTo)
+            if (!agent) return task
 
-  const selected = games.find((game) => game.id === selectedId) ?? games[0]
-  const playing = games.find((game) => game.status === 'playing') ?? games[0]
-  const totalPlaytime = games.reduce((total, game) => total + game.playtime, 0)
-  const completedCount = games.filter((game) => game.status === 'completed').length
-  const backlogCount = games.filter((game) => game.status === 'backlog').length
+            const isMatched = agent.id === task.type
+            const speedBonus = isMatched ? 1 : 0.62
+            const nextProgress = task.progress + agent.speed * speedBonus * 0.26
 
-  function updateGame(id: string, patch: Partial<Game>) {
-    setGames((library) =>
-      library.map((game) => (game.id === id ? { ...game, ...patch } : game)),
+            if (nextProgress < task.difficulty) {
+              return { ...task, progress: nextProgress }
+            }
+
+            const quality = agent.accuracy + (isMatched ? 8 : -18) + Math.random() * 16
+            const result = { ...task, progress: task.difficulty }
+            if (quality >= 78) {
+              completed = [...completed, result]
+              return { ...result, state: 'done' as const }
+            }
+
+            failed = [...failed, result]
+            return { ...result, state: 'failed' as const }
+          })
+          .filter((task) => task.state === 'queued' || task.state === 'active')
+
+        if (completed.length || failed.length) {
+          setMetrics((state) => {
+            const reward = completed.reduce((total, task) => total + task.reward, 0)
+            return {
+              ...state,
+              done: state.done + completed.length,
+              failed: state.failed + failed.length,
+              credits: state.credits + reward,
+              tokens: Math.max(0, state.tokens - completed.length * 10 - failed.length * 16),
+              happiness: Math.max(
+                0,
+                Math.min(100, state.happiness + completed.length * 3 - failed.length * 8),
+              ),
+            }
+          })
+
+          setLog((items) => [
+            ...completed.map((task) => `${task.label} shipped. +${task.reward} credits.`),
+            ...failed.map((task) => `${task.label} failed review. Bug debt increased.`),
+            ...items,
+          ].slice(0, 7))
+        }
+
+        return updated
+      })
+    }, 33)
+
+    return () => window.clearInterval(timer)
+  }, [agents])
+
+  function assignTask(agentId: AgentRole) {
+    if (!selected) return
+
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === selected.id
+          ? { ...task, state: 'active', assignedTo: agentId, progress: 0 }
+          : task,
+      ),
     )
+    setSelectedTask(null)
+    setLog((items) => [
+      `${selected.label} assigned to ${baseAgents.find((agent) => agent.id === agentId)?.title}.`,
+      ...items,
+    ].slice(0, 7))
   }
 
-  function chooseGame() {
-    const pool = games.filter(
-      (game) =>
-        game.status !== 'completed' &&
-        (mood === 'all' || game.mood.includes(mood)),
-    )
-    if (pool.length === 0) {
-      setRandomPick(null)
-      return
-    }
-    setRandomPick(pool[Math.floor(Math.random() * pool.length)])
+  function spawnTask() {
+    const task = createTask(nextTaskId)
+    setTasks((currentTasks) => [task, ...currentTasks])
+    setNextTaskId((id) => id + 1)
+    setSelectedTask(task.id)
   }
 
-  function addGame(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const title = String(data.get('title')).trim()
-    if (!title) return
+  function endDay() {
+    setMetrics((state) => ({
+      ...state,
+      day: state.day + 1,
+      tokens: state.tokens + 180,
+      happiness: Math.max(20, Math.min(100, state.happiness + (queuedTasks.length > 6 ? -6 : 4))),
+    }))
+    setTasks(makeInitialTasks())
+    setNextTaskId((id) => id + 8)
+    setSelectedTask(null)
+    setLog((items) => [`Day ${metrics.day + 1} planning started. Token budget refreshed.`, ...items].slice(0, 7))
+  }
 
-    const newGame: Game = {
-      id: `${title.toLowerCase().replace(/\W+/g, '-')}-${Date.now()}`,
-      title,
-      subtitle: 'Added to your offline shelf',
-      genre: String(data.get('genre')).trim() || 'Indie',
-      mood: [String(data.get('mood') || 'chill')],
-      status: String(data.get('status')) as Status,
-      playtime: 0,
-      rating: 0,
-      favorite: false,
-      note: String(data.get('note')).trim() || 'Ready when you are.',
-      accent: String(data.get('accent')),
-    }
+  function upgradeAgent(agentId: AgentRole) {
+    if (metrics.credits < 12) return
 
-    setGames((library) => [newGame, ...library])
-    setSelectedId(newGame.id)
-    setFormOpen(false)
+    setAgents((currentAgents) =>
+      currentAgents.map((agent) =>
+        agent.id === agentId
+          ? {
+              ...agent,
+              speed: Number((agent.speed + 0.08).toFixed(2)),
+              accuracy: Math.min(98, agent.accuracy + 2),
+              focus: Math.min(100, agent.focus + 3),
+            }
+          : agent,
+      ),
+    )
+    setMetrics((state) => ({ ...state, credits: state.credits - 12 }))
   }
 
   return (
-    <div className="vault">
-      <header className="topbar">
+    <main className="game-shell">
+      <section className="hud">
         <div className="brand">
-          <span className="brand-mark">OG</span>
+          <span className="brand-mark">AI</span>
           <div>
-            <p className="eyebrow">Local library</p>
-            <h1>Offline Game Vault</h1>
+            <p className="eyebrow">Agent management sim</p>
+            <h1>AgentOps Studio</h1>
           </div>
         </div>
-        <label className="search">
-          <span>Search</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Titles, genres, notes..."
-          />
-        </label>
-        <button className="primary-button" onClick={() => setFormOpen(true)}>
-          + Add game
+
+        <div className="stat-strip" aria-label="Studio metrics">
+          <Metric label="Day" value={metrics.day} />
+          <Metric label="Done" value={metrics.done} />
+          <Metric label="Bugs" value={metrics.failed} />
+          <Metric label="Tokens" value={metrics.tokens} />
+          <Metric label="Mood" value={`${metrics.happiness}%`} />
+          <Metric label="Credits" value={metrics.credits} />
+        </div>
+
+        <button className="primary-button" onClick={endDay}>
+          End day
         </button>
-      </header>
+      </section>
 
-      <main className="layout">
-        <aside className="sidebar">
-          <p className="section-label">Browse</p>
-          {(['all', 'playing', 'backlog', 'completed', 'paused'] as const).map(
-            (option) => (
-              <button
-                className={status === option ? 'nav-item active' : 'nav-item'}
-                key={option}
-                onClick={() => setStatus(option)}
-              >
-                <span>{option === 'all' ? 'Library' : statusLabels[option]}</span>
-                <small>
-                  {option === 'all'
-                    ? games.length
-                    : games.filter((game) => game.status === option).length}
-                </small>
-              </button>
-            ),
-          )}
-          <div className="divider" />
-          <p className="section-label">Collections</p>
-          <div className="collection"><span>Rainy Night</span><small>4</small></div>
-          <div className="collection"><span>Controller Ready</span><small>8</small></div>
-          <div className="collection"><span>Comfort Replays</span><small>3</small></div>
-          <div className="storage">
-            <p>OFFLINE STORAGE</p>
-            <div className="storage-bar"><span /></div>
-            <strong>146 GB</strong> <small>of 512 GB used</small>
-          </div>
-        </aside>
-
-        <section className="content">
-          <article className="featured" style={{ '--accent': playing.accent } as CSSProperties}>
-            <div className="feature-copy">
-              <p className="eyebrow">Continue playing</p>
-              <h2>{playing.title}</h2>
-              <p>{playing.note}</p>
-              <div className="feature-progress">
-                <span>{playing.playtime}h played</span>
-                <strong>Last played {playing.lastPlayed?.toLowerCase()}</strong>
-              </div>
-              <div className="feature-actions">
-                <button className="play-button" onClick={() => setPlayNotice(true)}>Play offline</button>
-                <button className="ghost-button" onClick={() => setSelectedId(playing.id)}>
-                  Details
-                </button>
-              </div>
-            </div>
-            <div className="feature-art">
-              <PixelScene game={playing} />
-            </div>
-          </article>
-
-          <div className="stats">
-            <Stat value={games.length} label="Games in vault" />
-            <Stat value={backlogCount} label="In backlog" />
-            <Stat value={completedCount} label="Completed" />
-            <Stat value={`${totalPlaytime}h`} label="Total played" />
-          </div>
-
-          <section className="picker">
+      <section className="workspace">
+        <aside className="panel task-panel">
+          <div className="panel-head">
             <div>
-              <p className="section-label">Tonight's queue</p>
-              <h2>What should I play?</h2>
+              <p className="eyebrow">Queue</p>
+              <h2>Incoming Work</h2>
             </div>
-            <div className="moods">
-              {moods.map((option) => (
+            <button className="icon-button" onClick={spawnTask} title="Add task">
+              +
+            </button>
+          </div>
+
+          <div className="task-list">
+            {queuedTasks.map((task) => (
+              <button
+                className={selectedTask === task.id ? 'task-card selected' : 'task-card'}
+                key={task.id}
+                onClick={() => setSelectedTask(task.id)}
+              >
+                <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                <strong>{task.label}</strong>
+                <small>Difficulty {task.difficulty} / Reward {task.reward}</small>
+              </button>
+            ))}
+          </div>
+
+          <div className="assignment-box">
+            <p className="eyebrow">Assign</p>
+            <strong>{selected ? selected.label : 'Select a task'}</strong>
+            <div className="assign-grid">
+              {agents.map((agent) => (
                 <button
-                  key={option}
-                  className={mood === option ? 'chip selected' : 'chip'}
-                  onClick={() => setMood(option)}
+                  key={agent.id}
+                  disabled={!selected}
+                  onClick={() => assignTask(agent.id)}
+                  style={{ '--agent-color': agent.color } as React.CSSProperties}
                 >
-                  {option}
+                  {agent.title}
                 </button>
               ))}
             </div>
-            <button className="random-button" onClick={chooseGame}>Random pick</button>
-            {randomPick && (
-              <button className="suggestion" onClick={() => setSelectedId(randomPick.id)}>
-                Tonight: <strong>{randomPick.title}</strong> <span>View</span>
-              </button>
-            )}
-          </section>
+          </div>
+        </aside>
 
-          <div className="shelf-title">
-            <div>
-              <p className="section-label">Your collection</p>
-              <h2>{status === 'all' ? 'All offline games' : statusLabels[status]}</h2>
+        <section className="office">
+          <div className="room-grid" />
+          <svg className="movement-routes" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {activeTasks.map((task) => {
+              const agent = agents.find((item) => item.id === task.assignedTo)
+              if (!agent) return null
+              const position = getAgentPosition(agent, task)
+
+              return (
+                <line
+                  key={task.id}
+                  x1={stationPositions.inbox.x}
+                  y1={stationPositions.inbox.y}
+                  x2={position.targetX}
+                  y2={position.targetY}
+                  style={{ '--agent-color': agent.color } as React.CSSProperties}
+                />
+              )
+            })}
+          </svg>
+          {activeTasks.map((task) => {
+            const agent = agents.find((item) => item.id === task.assignedTo)
+            if (!agent) return null
+            const position = getAgentPosition(agent, task)
+            if (!position.walking) return null
+
+            return (
+              <span
+                aria-hidden="true"
+                className="arrival-marker"
+                key={`arrival-${task.id}`}
+                style={
+                  {
+                    left: `${position.targetX}%`,
+                    top: `${position.targetY}%`,
+                    '--agent-color': agent.color,
+                  } as React.CSSProperties
+                }
+              />
+            )
+          })}
+          {furniture.map((item) => (
+            <img
+              alt={item.label}
+              className="furniture"
+              key={`${item.src}-${item.x}-${item.y}`}
+              src={item.src}
+              style={
+                {
+                  left: `${item.x}%`,
+                  top: `${item.y}%`,
+                  width: `${item.w}px`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+          {Object.entries(stationPositions).map(([id, station]) => (
+            <div
+              className={`station ${id}`}
+              key={id}
+              style={{ left: `${station.x}%`, top: `${station.y}%` }}
+            >
+              <span>{station.label}</span>
             </div>
-            <span>{filteredGames.length} titles</span>
-          </div>
+          ))}
 
-          <div className="game-grid">
-            {filteredGames.map((game) => (
-              <button
-                className={game.id === selected?.id ? 'game-card selected' : 'game-card'}
-                key={game.id}
-                onClick={() => setSelectedId(game.id)}
-                style={{ '--accent': game.accent } as CSSProperties}
+          {agents.map((agent, index) => {
+            const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
+            const progress = assigned
+              ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100))
+              : 0
+            const position = getAgentPosition(agent, assigned)
+
+            return (
+              <div
+                className={[
+                  'agent',
+                  assigned ? 'busy' : '',
+                  position.walking ? 'walking' : '',
+                ].filter(Boolean).join(' ')}
+                key={agent.id}
+                style={
+                  {
+                    left: `${position.x}%`,
+                    top: `${position.y}%`,
+                    '--agent-color': agent.color,
+                    '--pet-row': position.animationRow,
+                    '--step-delay': `${index * 90}ms`,
+                  } as React.CSSProperties
+                }
               >
-                <div className="cover">
-                  <span className="badge">{statusLabels[game.status]}</span>
-                  {game.favorite && <span className="heart">+ fav</span>}
-                  <PixelAvatar styleName={spriteForGame(game)} accent={game.accent} />
-                  <strong>{game.title}</strong>
+                <div
+                  aria-label={agent.petCredit}
+                  className="pet-sprite"
+                  role="img"
+                  style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties}
+                />
+                <strong>{agent.name}</strong>
+                <small>
+                  {assigned ? `${position.phase} ${progress}% ${taskLabels[assigned.type]}` : 'Idle'}
+                </small>
+              </div>
+            )
+          })}
+
+          {activeTasks.map((task) => {
+            const agent = agents.find((item) => item.id === task.assignedTo)
+            if (!agent) return null
+            const station = stationPositions[agent.station]
+            const progress = Math.round(Math.min(100, (task.progress / task.difficulty) * 100))
+
+            return (
+              <div
+                className="work-bubble"
+                key={task.id}
+                style={{ left: `calc(${station.x}% + 58px)`, top: `calc(${station.y}% - 44px)` }}
+              >
+                <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                <strong>{task.label}</strong>
+                <div className="progress">
+                  <span style={{ width: `${progress}%` }} />
                 </div>
-                <div className="card-meta">
-                  <strong>{game.title}</strong>
-                  <span>{game.genre} / {game.playtime}h</span>
-                </div>
-              </button>
-            ))}
-            {filteredGames.length === 0 && (
-              <p className="empty">No games match this shelf. Change the filters or add a title.</p>
-            )}
-          </div>
+              </div>
+            )
+          })}
         </section>
 
-        {selected && (
-          <aside className="details" style={{ '--accent': selected.accent } as CSSProperties}>
-            <div className="detail-cover">
-              <PixelScene game={selected} compact />
-              <span>{selected.genre}</span>
-              <strong>{selected.title}</strong>
+        <aside className="panel agent-panel">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Team</p>
+              <h2>Agents</h2>
             </div>
-            <p className="eyebrow">{statusLabels[selected.status]}</p>
-            <h2>{selected.title}</h2>
-            <p className="subtitle">{selected.subtitle}</p>
-            <div className="detail-tags">
-              {selected.mood.map((tag) => <span key={tag}>{tag}</span>)}
-            </div>
-            <dl>
-              <div><dt>Playtime</dt><dd>{selected.playtime} hours</dd></div>
-              <div><dt>Rating</dt><dd>{selected.rating ? `${selected.rating}/5` : 'Not rated'}</dd></div>
-              <div><dt>Last played</dt><dd>{selected.lastPlayed ?? 'Never'}</dd></div>
-            </dl>
-            <p className="note">{selected.note}</p>
-            <div className="detail-actions">
-              <button
-                className="ghost-button"
-                onClick={() => updateGame(selected.id, { favorite: !selected.favorite })}
-              >
-                {selected.favorite ? 'Remove favorite' : 'Favorite'}
-              </button>
-              <button
-                className="ghost-button"
-                onClick={() => updateGame(selected.id, { status: 'completed' })}
-              >
-                Mark complete
-              </button>
-            </div>
-          </aside>
-        )}
-      </main>
-
-      {formOpen && (
-        <div className="modal-backdrop" onMouseDown={() => setFormOpen(false)}>
-          <form className="modal" onSubmit={addGame} onMouseDown={(event) => event.stopPropagation()}>
-            <div className="modal-head">
-              <div>
-                <p className="eyebrow">Add to vault</p>
-                <h2>New offline game</h2>
-              </div>
-              <button type="button" onClick={() => setFormOpen(false)}>Close</button>
-            </div>
-            <label>Title<input name="title" placeholder="Sea of Stars" required /></label>
-            <div className="form-row">
-              <label>Genre<input name="genre" placeholder="RPG" /></label>
-              <label>Status
-                <select name="status" defaultValue="backlog">
-                  <option value="backlog">Backlog</option>
-                  <option value="playing">Playing</option>
-                  <option value="completed">Completed</option>
-                  <option value="paused">Paused</option>
-                </select>
-              </label>
-            </div>
-            <div className="form-row">
-              <label>Mood
-                <select name="mood" defaultValue="chill">
-                  {moods.slice(1).map((tag) => <option key={tag} value={tag}>{tag}</option>)}
-                </select>
-              </label>
-              <label>Cover color<input name="accent" type="color" defaultValue="#63dec6" /></label>
-            </div>
-            <label>Note<textarea name="note" placeholder="Why do you want to play this?" /></label>
-            <button className="primary-button submit" type="submit">Add to library</button>
-          </form>
-        </div>
-      )}
-      {playNotice && (
-        <div className="toast" role="status">
-          <div>
-            <strong>Web library mode</strong>
-            <p>Launching installed games requires the future desktop companion.</p>
+            <span className="load-pill">Load {teamLoad}%</span>
           </div>
-          <button onClick={() => setPlayNotice(false)}>Dismiss</button>
-        </div>
-      )}
-    </div>
+
+          <div className="agent-list">
+            {agents.map((agent) => (
+              <article
+                className="agent-card"
+                key={agent.id}
+                style={{ '--agent-color': agent.color } as React.CSSProperties}
+              >
+                <div>
+                  <span
+                    aria-hidden="true"
+                    className="mini-sprite"
+                    style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties}
+                  />
+                  <strong>{agent.name}</strong>
+                  <small>{agent.title}</small>
+                </div>
+                <dl>
+                  <div>
+                    <dt>Speed</dt>
+                    <dd>{agent.speed.toFixed(2)}x</dd>
+                  </div>
+                  <div>
+                    <dt>Accuracy</dt>
+                    <dd>{agent.accuracy}%</dd>
+                  </div>
+                  <div>
+                    <dt>Focus</dt>
+                    <dd>{agent.focus}%</dd>
+                  </div>
+                </dl>
+                <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
+                  Upgrade 12c
+                </button>
+              </article>
+            ))}
+          </div>
+
+          <div className="log-box">
+            <p className="eyebrow">Studio Log</p>
+            {log.map((item, index) => (
+              <p key={`${item}-${index}`}>{item}</p>
+            ))}
+          </div>
+        </aside>
+      </section>
+    </main>
   )
 }
 
-function Stat({ value, label }: { value: string | number; label: string }) {
+function Metric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="stat">
-      <strong>{value}</strong>
+    <div className="metric">
       <span>{label}</span>
+      <strong>{value}</strong>
     </div>
-  )
-}
-
-function PixelScene({ game, compact = false }: { game: Game; compact?: boolean }) {
-  return (
-    <svg
-      className={compact ? 'pixel-scene compact' : 'pixel-scene'}
-      viewBox="0 0 192 132"
-      role="img"
-      aria-label={`Original pixel art scene for ${game.title}`}
-      shapeRendering="crispEdges"
-    >
-      <rect width="192" height="132" fill="#101523" />
-      <rect y="94" width="192" height="38" fill="#14101d" />
-      <rect x="0" y="100" width="192" height="4" fill="#29213a" />
-      <rect x="18" y="20" width="46" height="47" fill="#0b101b" />
-      <rect x="22" y="24" width="38" height="34" fill="#15283b" />
-      <rect x="28" y="30" width="4" height="4" fill={game.accent} />
-      <rect x="48" y="38" width="4" height="4" fill="#f9f1ba" />
-      <rect x="37" y="47" width="3" height="3" fill="#fff2be" />
-      <rect x="20" y="67" width="42" height="4" fill="#3c2d3d" />
-      <rect x="126" y="27" width="44" height="66" fill="#1c1928" />
-      <rect x="130" y="34" width="9" height="24" fill={game.accent} />
-      <rect x="142" y="29" width="8" height="29" fill="#fdcf63" />
-      <rect x="153" y="39" width="11" height="19" fill="#ff7699" />
-      <rect x="130" y="61" width="34" height="4" fill="#4c3445" />
-      <rect x="132" y="70" width="18" height="20" fill="#6c3a4e" />
-      <rect x="154" y="75" width="10" height="15" fill="#63dec6" />
-      <rect x="15" y="111" width="156" height="4" fill="#251b32" />
-      <PixelAvatar styleName={spriteForGame(game)} accent={game.accent} scene />
-    </svg>
-  )
-}
-
-function PixelAvatar({
-  styleName,
-  accent,
-  scene = false,
-}: {
-  styleName: SpriteStyle
-  accent: string
-  scene?: boolean
-}) {
-  const hair = styleName === 'gardener' ? '#e7bf59' : styleName === 'climber' ? '#f26a7c' : '#303449'
-  const outfit = styleName === 'detective' ? '#dd9b55' : styleName === 'camper' ? '#7ad790' : accent
-  const accessory =
-    styleName === 'fighter' ? (
-      <rect x="37" y="30" width="3" height="19" fill="#f2e8d2" />
-    ) : styleName === 'gardener' ? (
-      <rect x="10" y="18" width="28" height="4" fill="#edcd62" />
-    ) : styleName === 'wanderer' ? (
-      <>
-        <rect x="13" y="14" width="5" height="10" fill="#eaf1f3" />
-        <rect x="30" y="14" width="5" height="10" fill="#eaf1f3" />
-      </>
-    ) : null
-
-  return (
-    <svg
-      className={scene ? 'pixel-avatar in-scene' : 'pixel-avatar'}
-      x={scene ? 70 : undefined}
-      y={scene ? 40 : undefined}
-      viewBox="0 0 48 64"
-      aria-hidden="true"
-      shapeRendering="crispEdges"
-    >
-      {accessory}
-      <rect x="16" y="18" width="17" height="15" fill={hair} />
-      <rect x="13" y="22" width="23" height="8" fill={hair} />
-      <rect x="18" y="24" width="14" height="12" fill="#ffd3a6" />
-      <rect x="20" y="28" width="3" height="3" fill="#161727" />
-      <rect x="28" y="28" width="3" height="3" fill="#161727" />
-      <rect x="16" y="36" width="19" height="16" fill={outfit} />
-      <rect x="12" y="38" width="4" height="11" fill="#ffd3a6" />
-      <rect x="35" y="38" width="4" height="11" fill="#ffd3a6" />
-      <rect x="17" y="52" width="7" height="9" fill="#25263a" />
-      <rect x="28" y="52" width="7" height="9" fill="#25263a" />
-      <rect x="15" y="60" width="10" height="3" fill="#080a12" />
-      <rect x="27" y="60" width="10" height="3" fill="#080a12" />
-    </svg>
   )
 }
 

@@ -1,16 +1,28 @@
-# Offline Game Vault
+# AgentOps Studio
 
-A local-first game library UI for a personal collection of offline games. Track backlog status, favorites, playtime, notes and pick what to play tonight by mood.
+A playable pixel management sim about coordinating AI agents through research, coding, review and deploy work.
 
-## Features
+## MVP Loop
 
-- Dark CRT-inspired responsive library dashboard
-- Continue-playing hero, status shelves and collection statistics
-- Search, status filters and mood-based random picker
-- Detail panel with favorite and completion actions
-- Add-game modal with local persistence through `localStorage`
+- Select incoming tasks from the queue.
+- Assign each task to the best-fit agent.
+- Watch agents process work at their stations.
+- Completed work gives credits; failed work burns happiness and tokens.
+- Spend credits to upgrade speed, accuracy and focus.
+- End the day to refresh the token budget and generate a new queue.
 
-This web edition catalogs games locally in the browser. Browsers cannot launch installed executables; a future Tauri desktop wrapper can add that capability.
+## Current Scope
+
+This prototype uses anime-style Codex Pet spritesheets for the agent characters:
+
+- Enana from `https://codex-pets.net/#/pets/enana`
+- Chappy-chan from `https://codex-pets.net/#/pets/chappy-chan`
+- Azuma from `https://codexpets.net/gallery/azuma`
+- Ace Taffy from `https://codexpets.net/gallery/ace-taffy`
+
+The selected asset source list is stored in `public/pets/selected-anime-pets.json`. Some selected pets may be community/fan-inspired; keep that in mind before public or commercial deployment, and consider replacing them with original anime-style pets if needed.
+
+Furniture, floor, and wall sprites are selected from SierraAssets' Pixel Art Furniture Pack on itch.io. The source page states the pack may be used in commercial and non-commercial games, but may not be resold as an asset pack or merchandise. A copy of the downloaded license file is stored at `public/furniture/LICENSE-sierrassets.txt`.
 
 ## Development
 

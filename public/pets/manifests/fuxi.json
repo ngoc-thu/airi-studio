@@ -1,0 +1,7 @@
+{
+  "id": "fuxi",
+  "displayName": "FuXi",
+  "description": "A tiny Codex pet inspired by Fu Xi, with a sage-like human upper body, jade-green serpent tail, bronze-gold robe accents, topknot hair, and a calm mythic expression.",
+  "spritesheetPath": "spritesheet.webp",
+  "kind": "person"
+}

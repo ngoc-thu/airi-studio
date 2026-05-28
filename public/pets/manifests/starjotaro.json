@@ -1,0 +1,7 @@
+{
+  "id": "starjotaro",
+  "displayName": "StarJotaro",
+  "description": "A stand-focused anime-style coding companion inspired by Jotaro Kujo and Star Platinum, simplified into a dramatic Codex digital pet.",
+  "spritesheetPath": "spritesheet.webp",
+  "kind": "person"
+}
