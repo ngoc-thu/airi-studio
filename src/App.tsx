@@ -44,6 +44,11 @@ type Point = {
   y: number
 }
 
+type AgentInspect = {
+  agentId: AgentRole
+  tick: number
+}
+
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
   inbox: { x: 12, y: 76, label: 'Inbox' },
   library: { x: 21, y: 25, label: 'Research Zone' },
@@ -291,6 +296,7 @@ function App() {
     'Day 1 started. Assign queued work to the right agent.',
     'Combo rule: Research -> Code -> Review -> Deploy keeps happiness high.',
   ])
+  const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
   const queuedTasks = tasks.filter((task) => task.state === 'queued')
@@ -361,6 +367,27 @@ function App() {
 
     return () => window.clearInterval(timer)
   }, [agents])
+
+  useEffect(() => {
+    if (!inspectedAgent) return undefined
+
+    const timer = window.setTimeout(() => {
+      setInspectedAgent((current) => (current?.tick === inspectedAgent.tick ? null : current))
+    }, 2100)
+
+    return () => window.clearTimeout(timer)
+  }, [inspectedAgent])
+
+  function inspectAgent(agent: Agent) {
+    setInspectedAgent((current) => ({
+      agentId: agent.id,
+      tick: (current?.tick ?? 0) + 1,
+    }))
+    setLog((items) => [
+      `${agent.name} checked in. ${agent.title} focus ${agent.focus}%.`,
+      ...items,
+    ].slice(0, 7))
+  }
 
   function assignTask(agentId: AgentRole) {
     if (!selected) return
@@ -555,6 +582,8 @@ function App() {
               ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100))
               : 0
             const position = getAgentPosition(agent, assigned)
+            const isInspected = inspectedAgent?.agentId === agent.id
+            const inspectKey = `${agent.id}-${inspectedAgent?.tick ?? 0}`
 
             return (
               <div
@@ -562,8 +591,18 @@ function App() {
                   'agent',
                   assigned ? 'busy' : '',
                   position.walking ? 'walking' : '',
+                  isInspected ? 'inspected' : '',
                 ].filter(Boolean).join(' ')}
                 key={agent.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => inspectAgent(agent)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    inspectAgent(agent)
+                  }
+                }}
                 style={
                   {
                     left: `${position.x}%`,
@@ -574,6 +613,9 @@ function App() {
                   } as React.CSSProperties
                 }
               >
+                {isInspected ? (
+                  <span className="agent-burst" key={`burst-${inspectKey}`} aria-hidden="true" />
+                ) : null}
                 <div
                   aria-label={agent.petCredit}
                   className="pet-sprite"
@@ -584,6 +626,12 @@ function App() {
                 <small>
                   {assigned ? `${position.phase} ${progress}% ${taskLabels[assigned.type]}` : 'Idle'}
                 </small>
+                {isInspected ? (
+                  <div className="agent-popover" key={`popover-${inspectKey}`}>
+                    <span>{agent.title}</span>
+                    <strong>{assigned ? `${progress}% ${taskLabels[assigned.type]}` : 'Ready'}</strong>
+                  </div>
+                ) : null}
               </div>
             )
           })}
