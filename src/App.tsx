@@ -356,7 +356,7 @@ function App() {
           <span className="brand-mark">AI</span>
           <div>
             <p className="eyebrow">Agent management sim</p>
-            <h1>AgentOps Studio</h1>
+            <h1>Airi Studio</h1>
           </div>
         </div>
 

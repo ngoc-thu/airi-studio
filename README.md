@@ -1,4 +1,4 @@
-# AgentOps Studio
+# Airi Studio
 
 A playable pixel management sim about coordinating AI agents through research, coding, review and deploy work.
 
