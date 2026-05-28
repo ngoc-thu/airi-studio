@@ -51,6 +51,11 @@ type AgentInspect = {
 
 type ZoSessionStatus = 'sending' | 'working' | 'done' | 'failed'
 
+type ZoInsight = {
+  label: string
+  value: string
+}
+
 type ZoSession = {
   taskId: number
   taskLabel: string
@@ -58,6 +63,10 @@ type ZoSession = {
   agentId: AgentRole
   status: ZoSessionStatus
   output: string
+  summary?: string
+  insights?: ZoInsight[]
+  actions?: string[]
+  confidence?: number
   conversationId?: string | null
 }
 
@@ -163,6 +172,67 @@ const zoStatusLabels: Record<ZoSessionStatus, string> = {
   working: 'Working',
   done: 'Done',
   failed: 'Failed',
+}
+
+const roleResultCards: Record<TaskType, { summaryLabel: string; sections: string[] }> = {
+  research: {
+    summaryLabel: 'Research brief',
+    sections: ['Key findings', 'Constraints', 'Open questions'],
+  },
+  plan: {
+    summaryLabel: 'Execution plan',
+    sections: ['Next steps', 'Files / systems', 'Risks'],
+  },
+  code: {
+    summaryLabel: 'Implementation notes',
+    sections: ['Changes', 'Important files', 'Verification'],
+  },
+  review: {
+    summaryLabel: 'Review verdict',
+    sections: ['Issues', 'Edge cases', 'Ship / fix decision'],
+  },
+}
+
+function cleanZoOutput(output: string) {
+  return output.replace(/\r\n/g, '\n').trim()
+}
+
+function makeZoSummary(output: string) {
+  const cleaned = cleanZoOutput(output)
+  const firstLine = cleaned
+    .split('\n')
+    .map((line) => line.replace(/^[-*#\d.\s]+/, '').trim())
+    .find(Boolean)
+
+  if (!firstLine) return 'Zo completed the request.'
+  return firstLine.length > 132 ? `${firstLine.slice(0, 129)}...` : firstLine
+}
+
+function extractZoActions(output: string, fallback: string[]) {
+  const cleaned = cleanZoOutput(output)
+  const bulletLines = cleaned
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => /^([-*•]|\d+[.)])\s+/.test(line))
+    .map((line) => line.replace(/^([-*•]|\d+[.)])\s+/, '').trim())
+    .filter(Boolean)
+
+  const candidates = bulletLines.length ? bulletLines : cleaned.split(/[.!?]\s+/).map((line) => line.trim())
+  const actions = candidates.filter(Boolean).slice(0, 3)
+
+  return actions.length ? actions : fallback
+}
+
+function makeZoInsights(task: Task, agent: Agent, output: string): ZoInsight[] {
+  const cleaned = cleanZoOutput(output)
+  const wordCount = cleaned ? cleaned.split(/\s+/).length : 0
+  const fit = agent.id === task.type ? 'Matched role' : 'Cross-role assist'
+
+  return [
+    { label: 'Role fit', value: fit },
+    { label: 'Signal', value: `${wordCount} words` },
+    { label: 'Source', value: 'Zo live' },
+  ]
 }
 
 const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
@@ -433,6 +503,13 @@ function App() {
         agentId,
         status: 'sending' as const,
         output: 'Opening a live Zo Computer session...',
+        summary: `${assignedAgent.name} is preparing ${taskLabels[selected.type]} work.`,
+        insights: [
+          { label: 'Pipeline', value: taskLabels[selected.type] },
+          { label: 'Agent', value: assignedAgent.name },
+          { label: 'Status', value: 'Queued' },
+        ],
+        actions: roleResultCards[selected.type].sections,
       },
       ...currentSessions.filter((session) => session.taskId !== selected.id),
     ].slice(0, 8))
@@ -447,7 +524,18 @@ function App() {
     setZoSessions((currentSessions) =>
       currentSessions.map((session) =>
         session.taskId === task.id
-          ? { ...session, status: 'working', output: 'Zo accepted the request. Waiting for result...' }
+          ? {
+              ...session,
+              status: 'working',
+              summary: 'Zo Computer is processing this live request...',
+              output: 'Zo accepted the request. Waiting for result...',
+              insights: [
+                { label: 'Pipeline', value: taskLabels[task.type] },
+                { label: 'Agent', value: agent.name },
+                { label: 'Mode', value: 'Live control' },
+              ],
+              actions: roleResultCards[task.type].sections,
+            }
           : session,
       ),
     )
@@ -477,13 +565,19 @@ function App() {
         throw new Error(data?.error ?? 'Zo Computer request failed.')
       }
 
+      const output = data?.output ?? 'Zo completed the task.'
+
       setZoSessions((currentSessions) =>
         currentSessions.map((session) =>
           session.taskId === task.id
             ? {
                 ...session,
                 status: 'done',
-                output: data?.output ?? 'Zo completed the task.',
+                output,
+                summary: makeZoSummary(output),
+                insights: makeZoInsights(task, agent, output),
+                actions: extractZoActions(output, roleResultCards[task.type].sections),
+                confidence: data?.confidence ?? Math.min(98, Math.max(62, agent.accuracy + (agent.id === task.type ? 4 : -10))),
                 conversationId: data?.conversationId ?? null,
               }
             : session,
@@ -494,7 +588,20 @@ function App() {
       const message = error instanceof Error ? error.message : 'Zo Computer request failed.'
       setZoSessions((currentSessions) =>
         currentSessions.map((session) =>
-          session.taskId === task.id ? { ...session, status: 'failed', output: message } : session,
+          session.taskId === task.id
+            ? {
+                ...session,
+                status: 'failed',
+                summary: 'Zo Computer could not complete this request.',
+                output: message,
+                insights: [
+                  { label: 'Failure', value: 'Request error' },
+                  { label: 'Agent', value: agent.name },
+                  { label: 'Retry', value: 'Needed' },
+                ],
+                actions: ['Check API/protection settings', 'Retry the same task', 'Inspect Vercel function logs'],
+              }
+            : session,
         ),
       )
       setLog((items) => [`Zo Computer failed for ${task.label}: ${message}`, ...items].slice(0, 7))
@@ -857,11 +964,47 @@ function App() {
                 </div>
 
                 {selectedZoSession ? (
-                  <div className="zo-output">
-                    <p>{selectedZoSession.output}</p>
-                    {selectedZoSession.conversationId ? (
-                      <small>Conversation {selectedZoSession.conversationId}</small>
+                  <div className="zo-result-card">
+                    <div className="zo-result-head">
+                      <span className={`task-type ${selectedZoSession.taskType}`}>
+                        {roleResultCards[selectedZoSession.taskType].summaryLabel}
+                      </span>
+                      {selectedZoSession.confidence ? (
+                        <strong>{selectedZoSession.confidence}% confidence</strong>
+                      ) : null}
+                    </div>
+
+                    <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
+
+                    {selectedZoSession.insights?.length ? (
+                      <div className="zo-insights">
+                        {selectedZoSession.insights.map((insight) => (
+                          <div key={`${insight.label}-${insight.value}`}>
+                            <span>{insight.label}</span>
+                            <strong>{insight.value}</strong>
+                          </div>
+                        ))}
+                      </div>
                     ) : null}
+
+                    {selectedZoSession.actions?.length ? (
+                      <div className="zo-actions">
+                        <span>Action cards</span>
+                        <ol>
+                          {selectedZoSession.actions.map((action, index) => (
+                            <li key={`${action}-${index}`}>{action}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    ) : null}
+
+                    <details className="zo-output">
+                      <summary>Full Zo output</summary>
+                      <p>{selectedZoSession.output}</p>
+                      {selectedZoSession.conversationId ? (
+                        <small>Conversation {selectedZoSession.conversationId}</small>
+                      ) : null}
+                    </details>
                   </div>
                 ) : null}
               </>

@@ -903,24 +903,103 @@ h2 {
 
 .zo-session-list small,
 .zo-output small,
-.zo-empty {
+.zo-empty,
+.zo-insights span,
+.zo-actions > span {
   color: #8d98aa;
   font-size: 11px;
 }
 
-.zo-output {
-  max-height: 168px;
+.zo-result-card {
+  display: grid;
+  gap: 10px;
   margin-top: 10px;
-  overflow: auto;
-  padding: 10px;
-  border-radius: 6px;
-  color: #cbd5e1;
-  background: rgba(9, 13, 22, 0.58);
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(121, 231, 197, 0.08), transparent 44%),
+    rgba(9, 13, 22, 0.62);
+}
+
+.zo-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.zo-result-head strong {
+  color: #d9f99d;
+  font-family: var(--pixel);
+  font-size: 11px;
+}
+
+.zo-summary {
+  margin: 0;
+  color: #f7fbff;
   line-height: 1.45;
 }
 
-.zo-output p {
+.zo-insights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.zo-insights div {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.zo-insights strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #f7fbff;
+  font-family: var(--pixel);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zo-actions {
+  display: grid;
+  gap: 7px;
+}
+
+.zo-actions ol {
+  display: grid;
+  gap: 6px;
   margin: 0;
+  padding-left: 19px;
+}
+
+.zo-actions li {
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.zo-output {
+  max-height: 190px;
+  overflow: auto;
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 1.45;
+}
+
+.zo-output summary {
+  cursor: pointer;
+  color: #79e7c5;
+  font-weight: 800;
+}
+
+.zo-output p {
+  margin: 9px 0 0;
   white-space: pre-wrap;
 }
 
