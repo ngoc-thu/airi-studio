@@ -423,6 +423,7 @@ function App() {
     'No mock tasks are loaded; create a real request from the intake form.',
   ])
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
+  const [selectedAgentId, setSelectedAgentId] = useState<AgentRole | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
   const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(null)
 
@@ -433,6 +434,7 @@ function App() {
   const activeTasks = tasks.filter((task) => task.state === 'active')
   const visibleZoSessions = zoSessions.slice(0, 4)
   const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
+  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) ?? agents[0]
 
   const teamLoad = useMemo(() => {
     return Math.min(100, Math.round((activeTasks.length / agents.length) * 100))
@@ -511,6 +513,7 @@ function App() {
   }, [inspectedAgent])
 
   function inspectAgent(agent: Agent) {
+    setSelectedAgentId(agent.id)
     setInspectedAgent((current) => ({
       agentId: agent.id,
       tick: (current?.tick ?? 0) + 1,
@@ -711,6 +714,12 @@ function App() {
     )
     setMetrics((state) => ({ ...state, credits: state.credits - 12 }))
   }
+
+  const selectedAgentTask = activeTasks.find((task) => task.assignedTo === selectedAgent?.id) ?? null
+  const selectedAgentTasks = tasks.filter((task) => task.assignedTo === selectedAgent?.id)
+  const selectedAgentProgress = selectedAgentTask
+    ? Math.round(Math.min(100, (selectedAgentTask.progress / selectedAgentTask.difficulty) * 100))
+    : 0
 
   return (
     <main className="game-shell">
@@ -1075,8 +1084,17 @@ function App() {
 
               return (
                 <article
-                  className="agent-card"
+                  className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
                   key={agent.id}
+                  onClick={() => setSelectedAgentId(agent.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setSelectedAgentId(agent.id)
+                    }
+                  }}
                   style={{ '--agent-color': agent.color } as React.CSSProperties}
                 >
                   <div className="agent-card-head">
@@ -1140,6 +1158,72 @@ function App() {
                 {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
               </span>
             </div>
+
+            {selectedAgent ? (
+              <div className="agent-detail-card">
+                <div className="agent-detail-head">
+                  <span
+                    aria-hidden="true"
+                    className="mini-sprite"
+                    style={{ '--pet-url': `url(${selectedAgent.pet})` } as React.CSSProperties}
+                  />
+                  <div>
+                    <p className="eyebrow">Selected agent</p>
+                    <h3>{selectedAgent.name}</h3>
+                    <small>{selectedAgent.title}</small>
+                  </div>
+                  <span className={`agent-state ${selectedAgentTask ? 'busy' : 'idle'}`}>
+                    {selectedAgentTask ? 'Working' : 'Idle'}
+                  </span>
+                </div>
+
+                <div className="agent-detail-current">
+                  <span>Currently doing</span>
+                  <strong>{selectedAgentTask ? selectedAgentTask.label : 'Waiting for a task from Reception'}</strong>
+                  <small>
+                    {selectedAgentTask
+                      ? `${taskLabels[selectedAgentTask.type]} · ${selectedAgentProgress}% complete · ${taskPriorityLabels[selectedAgentTask.priority]}`
+                      : 'Click a character to inspect their live workload.'}
+                  </small>
+                </div>
+
+                <dl className="agent-detail-stats">
+                  <div>
+                    <dt>Speed</dt>
+                    <dd>{selectedAgent.speed.toFixed(2)}x</dd>
+                  </div>
+                  <div>
+                    <dt>Accuracy</dt>
+                    <dd>{selectedAgent.accuracy}%</dd>
+                  </div>
+                  <div>
+                    <dt>Focus</dt>
+                    <dd>{selectedAgent.focus}%</dd>
+                  </div>
+                </dl>
+
+                <div className="agent-detail-tasks">
+                  <span>All assigned tasks</span>
+                  {selectedAgentTasks.length ? (
+                    <ul>
+                      {selectedAgentTasks.map((task) => {
+                        const progress = Math.round(Math.min(100, (task.progress / task.difficulty) * 100))
+                        return (
+                          <li key={task.id}>
+                            <strong>{task.label}</strong>
+                            <small>
+                              {taskLabels[task.type]} · {taskPriorityLabels[task.priority]} · {progress}%
+                            </small>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  ) : (
+                    <p>No tasks are assigned to this agent yet.</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             {visibleZoSessions.length ? (
               <>
