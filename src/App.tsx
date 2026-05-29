@@ -322,7 +322,7 @@ function createTask(
 }
 
 function makeInitialTasks() {
-  return Array.from({ length: 8 }, (_, index) => createTask(index + 1))
+  return [] as Task[]
 }
 
 function priorityRank(priority: TaskPriority) {
@@ -403,8 +403,8 @@ function getAgentPosition(agent: Agent, task?: Task) {
 function App() {
   const [agents, setAgents] = useState(baseAgents)
   const [tasks, setTasks] = useState(makeInitialTasks)
-  const [selectedTask, setSelectedTask] = useState<number | null>(1)
-  const [nextTaskId, setNextTaskId] = useState(9)
+  const [selectedTask, setSelectedTask] = useState<number | null>(null)
+  const [nextTaskId, setNextTaskId] = useState(1)
   const [requestTitle, setRequestTitle] = useState('Approve the new dashboard layout')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
@@ -419,8 +419,8 @@ function App() {
     credits: 18,
   })
   const [log, setLog] = useState<string[]>([
-    'Shift 1 started. Route new requests to the right agent.',
-    'Flow: Research -> Plan -> Code -> Review keeps the office moving cleanly.',
+    'Reception is open. Add a request to start the office.',
+    'No mock tasks are loaded; create a real request from the intake form.',
   ])
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
@@ -687,7 +687,7 @@ function App() {
       happiness: Math.max(20, Math.min(100, state.happiness + (queuedTasks.length > 6 ? -6 : 4))),
     }))
     setTasks(makeInitialTasks())
-    setNextTaskId((id) => id + 8)
+    setNextTaskId((id) => id + 1)
     setSelectedTask(null)
     setSelectedZoTaskId(null)
     setZoSessions([])
@@ -836,25 +836,32 @@ function App() {
           </form>
 
           <div className="task-list">
-            {queuedTasks.map((task) => (
-              <button
-                className={selectedTask === task.id ? 'task-card selected' : 'task-card'}
-                key={task.id}
-                onClick={() => setSelectedTask(task.id)}
-              >
-                <div className="task-card-head">
-                  <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
-                  <span className={`task-pill ${task.priority}`}>{taskPriorityLabels[task.priority]}</span>
-                </div>
-                <strong>{task.label}</strong>
-                <small>{task.note}</small>
-                <div className="task-meta">
-                  <span>{taskSourceLabels[task.source]}</span>
-                  <span>Difficulty {task.difficulty}</span>
-                  <span>Reward {task.reward}</span>
-                </div>
-              </button>
-            ))}
+            {queuedTasks.length ? (
+              queuedTasks.map((task) => (
+                <button
+                  className={selectedTask === task.id ? 'task-card selected' : 'task-card'}
+                  key={task.id}
+                  onClick={() => setSelectedTask(task.id)}
+                >
+                  <div className="task-card-head">
+                    <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                    <span className={`task-pill ${task.priority}`}>{taskPriorityLabels[task.priority]}</span>
+                  </div>
+                  <strong>{task.label}</strong>
+                  <small>{task.note}</small>
+                  <div className="task-meta">
+                    <span>{taskSourceLabels[task.source]}</span>
+                    <span>Difficulty {task.difficulty}</span>
+                    <span>Reward {task.reward}</span>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="empty-state">
+                <strong>No requests yet</strong>
+                <small>Create one in Reception to start the shift.</small>
+              </div>
+            )}
           </div>
 
           <div className="assignment-box">
@@ -1014,6 +1021,7 @@ function App() {
                 <small>
                   {assigned ? `${position.phase} ${progress}% ${taskLabels[assigned.type]}` : 'Idle'}
                 </small>
+                {assigned ? <span className={`task-pill ${assigned.priority}`}>{taskPriorityLabels[assigned.priority]}</span> : null}
                 {isInspected ? (
                   <div className="agent-popover" key={`popover-${inspectKey}`}>
                     <span>{agent.title}</span>
