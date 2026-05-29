@@ -122,6 +122,12 @@ h2 {
   margin: 0 auto;
 }
 
+.right-rail {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
 .panel {
   border-radius: 8px;
   padding: 16px;
@@ -1153,6 +1159,15 @@ h2 {
   gap: 12px;
 }
 
+.operations-card .agent-detail-card,
+.operations-card .zo-result-card,
+.operations-card .zo-session-list,
+.operations-card .log-box-compact {
+  max-height: none;
+  overflow: visible;
+  margin-top: 0;
+}
+
 .control-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1360,6 +1375,10 @@ h2 {
     min-height: auto;
     max-height: none;
     aspect-ratio: auto;
+  }
+
+  .right-rail {
+    gap: 14px;
   }
 
   .office {
