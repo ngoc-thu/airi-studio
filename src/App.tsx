@@ -1058,46 +1058,76 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Departments</p>
-              <h2>Agent roster</h2>
+              <h2>Agent status board</h2>
             </div>
             <span className="load-pill">Occupancy {teamLoad}%</span>
           </div>
 
           <div className="agent-list">
-            {agents.map((agent) => (
-              <article
-                className="agent-card"
-                key={agent.id}
-                style={{ '--agent-color': agent.color } as React.CSSProperties}
-              >
-                <div>
-                  <span
-                    aria-hidden="true"
-                    className="mini-sprite"
-                    style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties}
-                  />
-                  <strong>{agent.name}</strong>
-                  <small>{agent.title}</small>
-                </div>
-                <dl>
-                  <div>
-                    <dt>Speed</dt>
-                    <dd>{agent.speed.toFixed(2)}x</dd>
+            {agents.map((agent) => {
+              const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
+              const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
+              const statusLabel = assigned
+                ? progress >= 100
+                  ? 'Wrapping up'
+                  : 'Working'
+                : 'Idle'
+
+              return (
+                <article
+                  className="agent-card"
+                  key={agent.id}
+                  style={{ '--agent-color': agent.color } as React.CSSProperties}
+                >
+                  <div className="agent-card-head">
+                    <span
+                      aria-hidden="true"
+                      className="mini-sprite"
+                      style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties}
+                    />
+                    <div>
+                      <strong>{agent.name}</strong>
+                      <small>{agent.title}</small>
+                    </div>
+                    <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
                   </div>
-                  <div>
-                    <dt>Accuracy</dt>
-                    <dd>{agent.accuracy}%</dd>
+
+                  <div className="agent-task-line">
+                    <span>Current task</span>
+                    <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
+                    <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
                   </div>
-                  <div>
-                    <dt>Focus</dt>
-                    <dd>{agent.focus}%</dd>
-                  </div>
-                </dl>
-                <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
-                  Upgrade 12c
-                </button>
-              </article>
-            ))}
+
+                  <dl>
+                    <div>
+                      <dt>Speed</dt>
+                      <dd>{agent.speed.toFixed(2)}x</dd>
+                    </div>
+                    <div>
+                      <dt>Accuracy</dt>
+                      <dd>{agent.accuracy}%</dd>
+                    </div>
+                    <div>
+                      <dt>Focus</dt>
+                      <dd>{agent.focus}%</dd>
+                    </div>
+                  </dl>
+
+                  {assigned ? (
+                    <div className="agent-progress">
+                      <div className="progress">
+                        <span style={{ width: `${progress}%` }} />
+                      </div>
+                      <small>{progress}% complete</small>
+                    </div>
+                  ) : null}
+
+                  <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
+                    Upgrade 12c
+                  </button>
+                </article>
+              )
+            })}
           </div>
 
           <div className="zoo-panel">

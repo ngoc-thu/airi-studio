@@ -901,15 +901,61 @@ h2 {
   background: #171d2a;
 }
 
-.agent-card > div:first-child {
+.agent-card-head {
   display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 10px;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
   align-items: center;
 }
 
-.agent-card > div:first-child small {
-  grid-column: 2;
+.agent-card-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.agent-state {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #10141f;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.agent-state.idle {
+  background: #d9f99d;
+}
+
+.agent-state.busy {
+  background: var(--agent-color);
+}
+
+.agent-task-line {
+  display: grid;
+  gap: 4px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(8, 12, 20, 0.42);
+}
+
+.agent-task-line span,
+.agent-progress small {
+  color: #8d98aa;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.agent-task-line strong {
+  color: #f7fbff;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.agent-task-line small {
+  color: #b8c0cf;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .mini-sprite {
@@ -936,6 +982,15 @@ h2 {
   color: #f7fbff;
   font-family: var(--pixel);
   font-size: 12px;
+}
+
+.agent-progress {
+  display: grid;
+  gap: 5px;
+}
+
+.agent-progress .progress {
+  height: 8px;
 }
 
 .agent-card button {
