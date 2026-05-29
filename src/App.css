@@ -115,7 +115,7 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 340px;
+  grid-template-columns: 320px minmax(0, 1fr) 360px;
   gap: 18px;
   align-items: start;
   max-width: 1560px;
@@ -906,7 +906,7 @@ h2 {
   background: #171d2a;
 }
 
-.agent-panel {
+.agent-stack {
   display: grid;
   gap: 12px;
   align-content: start;
@@ -1041,7 +1041,6 @@ h2 {
 }
 
 .log-box-compact {
-  margin-top: 10px;
   padding-top: 0;
   border-top: 0;
 }
@@ -1153,19 +1152,17 @@ h2 {
   display: grid;
   gap: 12px;
   margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(17, 22, 34, 0.96);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
 }
 
 .sticky-bar {
   position: sticky;
   top: 16px;
   z-index: 5;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(17, 22, 34, 0.96);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
 }
 
 .control-tabs {

@@ -1060,8 +1060,8 @@ function App() {
           })}
         </section>
 
-        <aside className="panel agent-panel">
-          <div className="zoo-panel sticky-bar">
+        <aside className="right-rail">
+          <section className="panel sticky-bar">
             <div className="panel-head compact">
               <div>
                 <p className="eyebrow">Workspace control</p>
@@ -1215,71 +1215,74 @@ function App() {
                 ))}
               </div>
             ) : null}
-          </div>
+          </section>
 
-          <div className="log-box log-box-footer">
-            <p className="eyebrow">Recent signal</p>
-            {log.slice(0, 3).map((item, index) => (
-              <p key={`${item}-${index}`}>{item}</p>
-            ))}
-          </div>
+          <section className="panel agent-stack">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Departments</p>
+                <h2>Agent status board</h2>
+              </div>
+              <span className="load-pill">{activeTasks.length} active</span>
+            </div>
 
-          <div className="agent-list">
-            {agents.map((agent) => {
-              const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
-              const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
-              const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
+            <div className="agent-list">
+              {agents.map((agent) => {
+                const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
+                const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
+                const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
 
-              return (
-                <article
-                  className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
-                  key={agent.id}
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setSelectedAgentId(agent.id)
-                    }
-                  }}
-                  style={{ '--agent-color': agent.color } as React.CSSProperties}
-                >
-                  <div className="agent-card-head">
-                    <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties} />
-                    <div>
-                      <strong>{agent.name}</strong>
-                      <small>{agent.title}</small>
+                return (
+                  <article
+                    className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
+                    key={agent.id}
+                    onClick={() => setSelectedAgentId(agent.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSelectedAgentId(agent.id)
+                      }
+                    }}
+                    style={{ '--agent-color': agent.color } as React.CSSProperties}
+                  >
+                    <div className="agent-card-head">
+                      <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties} />
+                      <div>
+                        <strong>{agent.name}</strong>
+                        <small>{agent.title}</small>
+                      </div>
+                      <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
                     </div>
-                    <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
-                  </div>
 
-                  <div className="agent-task-line">
-                    <span>Current task</span>
-                    <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
-                    <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
-                  </div>
-
-                  <dl>
-                    <div><dt>Speed</dt><dd>{agent.speed.toFixed(2)}x</dd></div>
-                    <div><dt>Accuracy</dt><dd>{agent.accuracy}%</dd></div>
-                    <div><dt>Focus</dt><dd>{agent.focus}%</dd></div>
-                  </dl>
-
-                  {assigned ? (
-                    <div className="agent-progress">
-                      <div className="progress"><span style={{ width: `${progress}%` }} /></div>
-                      <small>{progress}% complete</small>
+                    <div className="agent-task-line">
+                      <span>Current task</span>
+                      <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
+                      <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
                     </div>
-                  ) : null}
 
-                  <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
-                    Upgrade 12c
-                  </button>
-                </article>
-              )
-            })}
-          </div>
+                    <dl>
+                      <div><dt>Speed</dt><dd>{agent.speed.toFixed(2)}x</dd></div>
+                      <div><dt>Accuracy</dt><dd>{agent.accuracy}%</dd></div>
+                      <div><dt>Focus</dt><dd>{agent.focus}%</dd></div>
+                    </dl>
+
+                    {assigned ? (
+                      <div className="agent-progress">
+                        <div className="progress"><span style={{ width: `${progress}%` }} /></div>
+                        <small>{progress}% complete</small>
+                      </div>
+                    ) : null}
+
+                    <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
+                      Upgrade 12c
+                    </button>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
         </aside>
       </section>
     </main>
