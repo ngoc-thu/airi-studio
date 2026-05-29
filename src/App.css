@@ -118,6 +118,8 @@ h2 {
   grid-template-columns: 320px minmax(0, 1fr) 340px;
   gap: 18px;
   align-items: start;
+  max-width: 1560px;
+  margin: 0 auto;
 }
 
 .panel {
@@ -332,8 +334,8 @@ h2 {
     #20283a;
   background-size: auto, 32px 32px, auto;
   aspect-ratio: 16 / 11;
-  min-height: clamp(680px, calc(100vh - 126px), 920px);
-  max-height: calc(100vh - 126px);
+  min-height: 680px;
+  max-height: 860px;
   image-rendering: pixelated;
 }
 
@@ -1017,6 +1019,29 @@ h2 {
   line-height: 1.3;
 }
 
+.agent-detail-card,
+.zo-result-card,
+.zo-session-list,
+.log-box-compact {
+  max-height: 46vh;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.log-box-compact {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.log-box-footer {
+  margin-top: 12px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.28);
+}
+
 .agent-card-head > div {
   display: grid;
   gap: 2px;
@@ -1116,6 +1141,28 @@ h2 {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.control-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.control-tabs button {
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #f7fbff;
+  background: #1c2435;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.control-tabs button.active {
+  color: #10141f;
+  background: #79e7c5;
 }
 
 .zo-status {

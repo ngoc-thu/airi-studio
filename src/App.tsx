@@ -426,6 +426,7 @@ function App() {
   const [selectedAgentId, setSelectedAgentId] = useState<AgentRole | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
   const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(null)
+  const [rightPanelTab, setRightPanelTab] = useState<'agents' | 'sessions' | 'logs'>('agents')
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
   const queuedTasks = tasks
@@ -1151,15 +1152,45 @@ function App() {
           <div className="zoo-panel">
             <div className="panel-head compact">
               <div>
-                <p className="eyebrow">Live Handoff</p>
-                <h2>Control desk</h2>
+                <p className="eyebrow">Workspace control</p>
+                <h2>Operations bar</h2>
               </div>
               <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
                 {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
               </span>
             </div>
 
-            {selectedAgent ? (
+            <div className="control-tabs" role="tablist" aria-label="Workspace controls">
+              <button
+                type="button"
+                className={rightPanelTab === 'agents' ? 'active' : ''}
+                onClick={() => setRightPanelTab('agents')}
+                role="tab"
+                aria-selected={rightPanelTab === 'agents'}
+              >
+                Agents
+              </button>
+              <button
+                type="button"
+                className={rightPanelTab === 'sessions' ? 'active' : ''}
+                onClick={() => setRightPanelTab('sessions')}
+                role="tab"
+                aria-selected={rightPanelTab === 'sessions'}
+              >
+                Sessions
+              </button>
+              <button
+                type="button"
+                className={rightPanelTab === 'logs' ? 'active' : ''}
+                onClick={() => setRightPanelTab('logs')}
+                role="tab"
+                aria-selected={rightPanelTab === 'logs'}
+              >
+                Logs
+              </button>
+            </div>
+
+            {rightPanelTab === 'agents' && selectedAgent ? (
               <div className="agent-detail-card">
                 <div className="agent-detail-head">
                   <span
@@ -1225,87 +1256,100 @@ function App() {
               </div>
             ) : null}
 
-            {visibleZoSessions.length ? (
+            {rightPanelTab === 'sessions' ? (
               <>
-                <div className="zo-session-list">
-                  {visibleZoSessions.map((session) => {
-                    const agent = agents.find((item) => item.id === session.agentId)
+                {visibleZoSessions.length ? (
+                  <>
+                    <div className="zo-session-list">
+                      {visibleZoSessions.map((session) => {
+                        const agent = agents.find((item) => item.id === session.agentId)
 
-                    return (
-                      <button
-                        className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
-                        key={session.taskId}
-                        onClick={() => setSelectedZoTaskId(session.taskId)}
-                        style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
-                      >
-                        <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
-                        <strong>{session.taskLabel}</strong>
-                        <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {selectedZoSession ? (
-                  <div className="zo-result-card">
-                    <div className="zo-result-head">
-                      <span className={`task-type ${selectedZoSession.taskType}`}>
-                        {roleResultCards[selectedZoSession.taskType].summaryLabel}
-                      </span>
-                      {selectedZoSession.confidence ? (
-                        <strong>{selectedZoSession.confidence}% confidence</strong>
-                      ) : null}
+                        return (
+                          <button
+                            className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
+                            key={session.taskId}
+                            onClick={() => setSelectedZoTaskId(session.taskId)}
+                            style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
+                          >
+                            <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
+                            <strong>{session.taskLabel}</strong>
+                            <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
+                          </button>
+                        )
+                      })}
                     </div>
 
-                    <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
+                    {selectedZoSession ? (
+                      <div className="zo-result-card">
+                        <div className="zo-result-head">
+                          <span className={`task-type ${selectedZoSession.taskType}`}>
+                            {roleResultCards[selectedZoSession.taskType].summaryLabel}
+                          </span>
+                          {selectedZoSession.confidence ? (
+                            <strong>{selectedZoSession.confidence}% confidence</strong>
+                          ) : null}
+                        </div>
 
-                    {selectedZoSession.insights?.length ? (
-                      <div className="zo-insights">
-                        {selectedZoSession.insights.map((insight) => (
-                          <div key={`${insight.label}-${insight.value}`}>
-                            <span>{insight.label}</span>
-                            <strong>{insight.value}</strong>
+                        <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
+
+                        {selectedZoSession.insights?.length ? (
+                          <div className="zo-insights">
+                            {selectedZoSession.insights.map((insight) => (
+                              <div key={`${insight.label}-${insight.value}`}>
+                                <span>{insight.label}</span>
+                                <strong>{insight.value}</strong>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : null}
+
+                        {selectedZoSession.actions?.length ? (
+                          <div className="zo-actions">
+                            <span>Action cards</span>
+                            <ol>
+                              {selectedZoSession.actions.map((action, index) => (
+                                <li key={`${action}-${index}`}>{action}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        ) : null}
+
+                        {selectedZoSession.status === 'pending' ? (
+                          <div className="zo-confirm-actions">
+                            <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
+                            <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
+                          </div>
+                        ) : null}
+
+                        <details className="zo-output">
+                          <summary>Full Zo output</summary>
+                          <p>{selectedZoSession.output}</p>
+                          {selectedZoSession.conversationId ? (
+                            <small>Conversation {selectedZoSession.conversationId}</small>
+                          ) : null}
+                        </details>
                       </div>
                     ) : null}
-
-                    {selectedZoSession.actions?.length ? (
-                      <div className="zo-actions">
-                        <span>Action cards</span>
-                        <ol>
-                          {selectedZoSession.actions.map((action, index) => (
-                            <li key={`${action}-${index}`}>{action}</li>
-                          ))}
-                        </ol>
-                      </div>
-                    ) : null}
-
-                    {selectedZoSession.status === 'pending' ? (
-                      <div className="zo-confirm-actions">
-                        <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
-                        <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
-                      </div>
-                    ) : null}
-
-                    <details className="zo-output">
-                      <summary>Full Zo output</summary>
-                      <p>{selectedZoSession.output}</p>
-                      {selectedZoSession.conversationId ? (
-                        <small>Conversation {selectedZoSession.conversationId}</small>
-                      ) : null}
-                    </details>
-                  </div>
-                ) : null}
+                  </>
+                ) : (
+                  <p className="zo-empty">Assign a task to send real work through Zo.</p>
+                )}
               </>
-            ) : (
-              <p className="zo-empty">Assign a task to send real work through Zo.</p>
-            )}
+            ) : null}
+
+            {rightPanelTab === 'logs' ? (
+              <div className="log-box log-box-compact">
+                <p className="eyebrow">Activity Log</p>
+                {log.map((item, index) => (
+                  <p key={`${item}-${index}`}>{item}</p>
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          <div className="log-box">
-            <p className="eyebrow">Activity Log</p>
-            {log.map((item, index) => (
+          <div className="log-box log-box-footer">
+            <p className="eyebrow">Recent signal</p>
+            {log.slice(0, 3).map((item, index) => (
               <p key={`${item}-${index}`}>{item}</p>
             ))}
           </div>
@@ -1325,3 +1369,4 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 }
 
 export default App
+
