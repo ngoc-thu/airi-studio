@@ -382,8 +382,8 @@ function App() {
     credits: 18,
   })
   const [log, setLog] = useState<string[]>([
-    'Day 1 started. Assign queued work to the right agent.',
-    'Pipeline: Research -> Plan -> Code -> Review keeps work clean.',
+    'Shift 1 started. Route new requests to the right agent.',
+    'Flow: Research -> Plan -> Code -> Review keeps the office moving cleanly.',
   ])
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
@@ -523,7 +523,7 @@ function App() {
   function cancelZoTask(session: ZoSession) {
     setZoSessions((currentSessions) => currentSessions.filter((item) => item.taskId !== session.taskId))
     setSelectedZoTaskId((current) => (current === session.taskId ? null : current))
-    setLog((items) => [`Zo send cancelled for ${session.taskLabel}.`, ...items].slice(0, 7))
+    setLog((items) => [`Live handoff cancelled for ${session.taskLabel}.`, ...items].slice(0, 7))
   }
 
   function confirmZoTask(session: ZoSession) {
@@ -531,7 +531,7 @@ function App() {
     const agent = agents.find((item) => item.id === session.agentId)
     if (!task || !agent || session.status !== 'pending') return
 
-    setLog((items) => [`Confirmed: sending ${task.label} to Zo Computer.`, ...items].slice(0, 7))
+    setLog((items) => [`Confirmed: sending ${task.label} to the live control flow.`, ...items].slice(0, 7))
     void sendTaskToZo(task, agent)
   }
 
@@ -598,7 +598,7 @@ function App() {
             : session,
         ),
       )
-      setLog((items) => [`Zo returned a result for ${task.label}.`, ...items].slice(0, 7))
+      setLog((items) => [`Live result returned for ${task.label}.`, ...items].slice(0, 7))
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Zo Computer request failed.'
       setZoSessions((currentSessions) =>
@@ -619,7 +619,7 @@ function App() {
             : session,
         ),
       )
-      setLog((items) => [`Zo Computer failed for ${task.label}: ${message}`, ...items].slice(0, 7))
+      setLog((items) => [`Live handoff failed for ${task.label}: ${message}`, ...items].slice(0, 7))
     }
   }
 
@@ -642,7 +642,7 @@ function App() {
     setSelectedTask(null)
     setSelectedZoTaskId(null)
     setZoSessions([])
-    setLog((items) => [`Day ${metrics.day + 1} planning started. Token budget refreshed.`, ...items].slice(0, 7))
+    setLog((items) => [`Shift ${metrics.day + 1} planning started. Budget refreshed.`, ...items].slice(0, 7))
   }
 
   function upgradeAgent(agentId: AgentRole) {
@@ -667,24 +667,24 @@ function App() {
     <main className="game-shell">
       <section className="hud">
         <div className="brand">
-          <span className="brand-mark">AI</span>
+          <span className="brand-mark">AO</span>
           <div>
-            <p className="eyebrow">Agent management sim</p>
-            <h1>Airi Studio</h1>
+            <p className="eyebrow">AI office workspace</p>
+            <h1>Airi Office</h1>
           </div>
         </div>
 
-        <div className="stat-strip" aria-label="Studio metrics">
-          <Metric label="Day" value={metrics.day} />
-          <Metric label="Done" value={metrics.done} />
-          <Metric label="Bugs" value={metrics.failed} />
-          <Metric label="Tokens" value={metrics.tokens} />
-          <Metric label="Mood" value={`${metrics.happiness}%`} />
-          <Metric label="Credits" value={metrics.credits} />
+        <div className="stat-strip" aria-label="Office metrics">
+          <Metric label="Shift" value={metrics.day} />
+          <Metric label="Closed" value={metrics.done} />
+          <Metric label="Blocked" value={metrics.failed} />
+          <Metric label="Capacity" value={metrics.tokens} />
+          <Metric label="Morale" value={`${metrics.happiness}%`} />
+          <Metric label="Budget" value={metrics.credits} />
         </div>
 
         <button className="primary-button" onClick={endDay}>
-          End day
+          Close shift
         </button>
       </section>
 
@@ -692,10 +692,10 @@ function App() {
         <aside className="panel task-panel">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Queue</p>
-              <h2>Incoming Work</h2>
+              <p className="eyebrow">Inbox</p>
+              <h2>New Requests</h2>
             </div>
-            <button className="icon-button" onClick={spawnTask} title="Add task">
+            <button className="icon-button" onClick={spawnTask} title="Add request">
               +
             </button>
           </div>
@@ -716,7 +716,7 @@ function App() {
 
           <div className="assignment-box">
             <p className="eyebrow">Assign</p>
-            <strong>{selected ? selected.label : 'Select a task'}</strong>
+            <strong>{selected ? selected.label : 'Select a request'}</strong>
             <div className="assign-grid">
               {agents.map((agent) => (
                 <button
@@ -903,10 +903,10 @@ function App() {
         <aside className="panel agent-panel">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Team</p>
-              <h2>Agents</h2>
+              <p className="eyebrow">Departments</p>
+              <h2>Agent roster</h2>
             </div>
-            <span className="load-pill">Load {teamLoad}%</span>
+            <span className="load-pill">Occupancy {teamLoad}%</span>
           </div>
 
           <div className="agent-list">
@@ -949,8 +949,8 @@ function App() {
           <div className="zoo-panel">
             <div className="panel-head compact">
               <div>
-                <p className="eyebrow">Live Control</p>
-                <h2>Zoo Computer</h2>
+                <p className="eyebrow">Live Handoff</p>
+                <h2>Control desk</h2>
               </div>
               <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
                 {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
@@ -1036,7 +1036,7 @@ function App() {
           </div>
 
           <div className="log-box">
-            <p className="eyebrow">Studio Log</p>
+            <p className="eyebrow">Activity Log</p>
             {log.map((item, index) => (
               <p key={`${item}-${index}`}>{item}</p>
             ))}

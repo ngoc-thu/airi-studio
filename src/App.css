@@ -29,7 +29,7 @@
   background: #6ee7b7;
   color: #10141f;
   font-family: var(--pixel);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 900;
   box-shadow: 5px 5px 0 #243041;
 }
@@ -115,7 +115,7 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 315px minmax(520px, 1fr) 330px;
+  grid-template-columns: 320px minmax(540px, 1fr) 340px;
   gap: 18px;
   align-items: stretch;
 }
