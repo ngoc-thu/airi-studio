@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 type AgentRole = 'research' | 'plan' | 'code' | 'review'
@@ -436,10 +436,6 @@ function App() {
   const visibleZoSessions = zoSessions.slice(0, 4)
   const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
   const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) ?? agents[0]
-
-  const teamLoad = useMemo(() => {
-    return Math.min(100, Math.round((activeTasks.length / agents.length) * 100))
-  }, [activeTasks.length, agents.length])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -1065,91 +1061,7 @@ function App() {
         </section>
 
         <aside className="panel agent-panel">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">Departments</p>
-              <h2>Agent status board</h2>
-            </div>
-            <span className="load-pill">Occupancy {teamLoad}%</span>
-          </div>
-
-          <div className="agent-list">
-            {agents.map((agent) => {
-              const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
-              const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
-              const statusLabel = assigned
-                ? progress >= 100
-                  ? 'Wrapping up'
-                  : 'Working'
-                : 'Idle'
-
-              return (
-                <article
-                  className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
-                  key={agent.id}
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setSelectedAgentId(agent.id)
-                    }
-                  }}
-                  style={{ '--agent-color': agent.color } as React.CSSProperties}
-                >
-                  <div className="agent-card-head">
-                    <span
-                      aria-hidden="true"
-                      className="mini-sprite"
-                      style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties}
-                    />
-                    <div>
-                      <strong>{agent.name}</strong>
-                      <small>{agent.title}</small>
-                    </div>
-                    <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
-                  </div>
-
-                  <div className="agent-task-line">
-                    <span>Current task</span>
-                    <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
-                    <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
-                  </div>
-
-                  <dl>
-                    <div>
-                      <dt>Speed</dt>
-                      <dd>{agent.speed.toFixed(2)}x</dd>
-                    </div>
-                    <div>
-                      <dt>Accuracy</dt>
-                      <dd>{agent.accuracy}%</dd>
-                    </div>
-                    <div>
-                      <dt>Focus</dt>
-                      <dd>{agent.focus}%</dd>
-                    </div>
-                  </dl>
-
-                  {assigned ? (
-                    <div className="agent-progress">
-                      <div className="progress">
-                        <span style={{ width: `${progress}%` }} />
-                      </div>
-                      <small>{progress}% complete</small>
-                    </div>
-                  ) : null}
-
-                  <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
-                    Upgrade 12c
-                  </button>
-                </article>
-              )
-            })}
-          </div>
-
-          <div className="zoo-panel">
+          <div className="zoo-panel sticky-bar">
             <div className="panel-head compact">
               <div>
                 <p className="eyebrow">Workspace control</p>
@@ -1161,31 +1073,13 @@ function App() {
             </div>
 
             <div className="control-tabs" role="tablist" aria-label="Workspace controls">
-              <button
-                type="button"
-                className={rightPanelTab === 'agents' ? 'active' : ''}
-                onClick={() => setRightPanelTab('agents')}
-                role="tab"
-                aria-selected={rightPanelTab === 'agents'}
-              >
+              <button type="button" className={rightPanelTab === 'agents' ? 'active' : ''} onClick={() => setRightPanelTab('agents')} role="tab" aria-selected={rightPanelTab === 'agents'}>
                 Agents
               </button>
-              <button
-                type="button"
-                className={rightPanelTab === 'sessions' ? 'active' : ''}
-                onClick={() => setRightPanelTab('sessions')}
-                role="tab"
-                aria-selected={rightPanelTab === 'sessions'}
-              >
+              <button type="button" className={rightPanelTab === 'sessions' ? 'active' : ''} onClick={() => setRightPanelTab('sessions')} role="tab" aria-selected={rightPanelTab === 'sessions'}>
                 Sessions
               </button>
-              <button
-                type="button"
-                className={rightPanelTab === 'logs' ? 'active' : ''}
-                onClick={() => setRightPanelTab('logs')}
-                role="tab"
-                aria-selected={rightPanelTab === 'logs'}
-              >
+              <button type="button" className={rightPanelTab === 'logs' ? 'active' : ''} onClick={() => setRightPanelTab('logs')} role="tab" aria-selected={rightPanelTab === 'logs'}>
                 Logs
               </button>
             </div>
@@ -1193,19 +1087,13 @@ function App() {
             {rightPanelTab === 'agents' && selectedAgent ? (
               <div className="agent-detail-card">
                 <div className="agent-detail-head">
-                  <span
-                    aria-hidden="true"
-                    className="mini-sprite"
-                    style={{ '--pet-url': `url(${selectedAgent.pet})` } as React.CSSProperties}
-                  />
+                  <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${selectedAgent.pet})` } as React.CSSProperties} />
                   <div>
                     <p className="eyebrow">Selected agent</p>
                     <h3>{selectedAgent.name}</h3>
                     <small>{selectedAgent.title}</small>
                   </div>
-                  <span className={`agent-state ${selectedAgentTask ? 'busy' : 'idle'}`}>
-                    {selectedAgentTask ? 'Working' : 'Idle'}
-                  </span>
+                  <span className={`agent-state ${selectedAgentTask ? 'busy' : 'idle'}`}>{selectedAgentTask ? 'Working' : 'Idle'}</span>
                 </div>
 
                 <div className="agent-detail-current">
@@ -1219,18 +1107,9 @@ function App() {
                 </div>
 
                 <dl className="agent-detail-stats">
-                  <div>
-                    <dt>Speed</dt>
-                    <dd>{selectedAgent.speed.toFixed(2)}x</dd>
-                  </div>
-                  <div>
-                    <dt>Accuracy</dt>
-                    <dd>{selectedAgent.accuracy}%</dd>
-                  </div>
-                  <div>
-                    <dt>Focus</dt>
-                    <dd>{selectedAgent.focus}%</dd>
-                  </div>
+                  <div><dt>Speed</dt><dd>{selectedAgent.speed.toFixed(2)}x</dd></div>
+                  <div><dt>Accuracy</dt><dd>{selectedAgent.accuracy}%</dd></div>
+                  <div><dt>Focus</dt><dd>{selectedAgent.focus}%</dd></div>
                 </dl>
 
                 <div className="agent-detail-tasks">
@@ -1242,9 +1121,7 @@ function App() {
                         return (
                           <li key={task.id}>
                             <strong>{task.label}</strong>
-                            <small>
-                              {taskLabels[task.type]} · {taskPriorityLabels[task.priority]} · {progress}%
-                            </small>
+                            <small>{taskLabels[task.type]} · {taskPriorityLabels[task.priority]} · {progress}%</small>
                           </li>
                         )
                       })}
@@ -1263,7 +1140,6 @@ function App() {
                     <div className="zo-session-list">
                       {visibleZoSessions.map((session) => {
                         const agent = agents.find((item) => item.id === session.agentId)
-
                         return (
                           <button
                             className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
@@ -1282,12 +1158,8 @@ function App() {
                     {selectedZoSession ? (
                       <div className="zo-result-card">
                         <div className="zo-result-head">
-                          <span className={`task-type ${selectedZoSession.taskType}`}>
-                            {roleResultCards[selectedZoSession.taskType].summaryLabel}
-                          </span>
-                          {selectedZoSession.confidence ? (
-                            <strong>{selectedZoSession.confidence}% confidence</strong>
-                          ) : null}
+                          <span className={`task-type ${selectedZoSession.taskType}`}>{roleResultCards[selectedZoSession.taskType].summaryLabel}</span>
+                          {selectedZoSession.confidence ? <strong>{selectedZoSession.confidence}% confidence</strong> : null}
                         </div>
 
                         <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
@@ -1324,9 +1196,7 @@ function App() {
                         <details className="zo-output">
                           <summary>Full Zo output</summary>
                           <p>{selectedZoSession.output}</p>
-                          {selectedZoSession.conversationId ? (
-                            <small>Conversation {selectedZoSession.conversationId}</small>
-                          ) : null}
+                          {selectedZoSession.conversationId ? <small>Conversation {selectedZoSession.conversationId}</small> : null}
                         </details>
                       </div>
                     ) : null}
@@ -1353,12 +1223,68 @@ function App() {
               <p key={`${item}-${index}`}>{item}</p>
             ))}
           </div>
+
+          <div className="agent-list">
+            {agents.map((agent) => {
+              const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
+              const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
+              const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
+
+              return (
+                <article
+                  className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
+                  key={agent.id}
+                  onClick={() => setSelectedAgentId(agent.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setSelectedAgentId(agent.id)
+                    }
+                  }}
+                  style={{ '--agent-color': agent.color } as React.CSSProperties}
+                >
+                  <div className="agent-card-head">
+                    <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties} />
+                    <div>
+                      <strong>{agent.name}</strong>
+                      <small>{agent.title}</small>
+                    </div>
+                    <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
+                  </div>
+
+                  <div className="agent-task-line">
+                    <span>Current task</span>
+                    <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
+                    <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
+                  </div>
+
+                  <dl>
+                    <div><dt>Speed</dt><dd>{agent.speed.toFixed(2)}x</dd></div>
+                    <div><dt>Accuracy</dt><dd>{agent.accuracy}%</dd></div>
+                    <div><dt>Focus</dt><dd>{agent.focus}%</dd></div>
+                  </dl>
+
+                  {assigned ? (
+                    <div className="agent-progress">
+                      <div className="progress"><span style={{ width: `${progress}%` }} /></div>
+                      <small>{progress}% complete</small>
+                    </div>
+                  ) : null}
+
+                  <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
+                    Upgrade 12c
+                  </button>
+                </article>
+              )
+            })}
+          </div>
         </aside>
       </section>
     </main>
   )
 }
-
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="metric">
