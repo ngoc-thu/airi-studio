@@ -6,6 +6,10 @@ type StationId = 'inbox' | 'library' | 'planning' | 'terminal' | 'review'
 type TaskType = AgentRole
 type TaskState = 'queued' | 'active' | 'done' | 'failed'
 
+type TaskPriority = 'low' | 'normal' | 'high'
+
+type TaskSource = 'chat' | 'meeting' | 'system'
+
 type Agent = {
   id: AgentRole
   name: string
@@ -23,6 +27,9 @@ type Task = {
   id: number
   label: string
   type: TaskType
+  priority: TaskPriority
+  source: TaskSource
+  note: string
   difficulty: number
   reward: number
   state: TaskState
@@ -167,6 +174,18 @@ const taskLabels: Record<TaskType, string> = {
   review: 'Review',
 }
 
+const taskPriorityLabels: Record<TaskPriority, string> = {
+  low: 'Low',
+  normal: 'Normal',
+  high: 'High',
+}
+
+const taskSourceLabels: Record<TaskSource, string> = {
+  chat: 'Chat',
+  meeting: 'Meeting',
+  system: 'System',
+}
+
 const zoStatusLabels: Record<ZoSessionStatus, string> = {
   pending: 'Confirm',
   sending: 'Sending',
@@ -277,15 +296,24 @@ const hallwayRoutes: Record<AgentRole, Point[]> = {
   ],
 }
 
-function createTask(id: number): Task {
+function createTask(
+  id: number,
+  overrides: Partial<Pick<Task, 'label' | 'type' | 'priority' | 'source' | 'note'>> = {},
+): Task {
   const types: TaskType[] = ['research', 'plan', 'code', 'review']
-  const type = types[Math.floor(Math.random() * types.length)]
+  const type = overrides.type ?? types[Math.floor(Math.random() * types.length)]
   const templates = taskTemplates[type]
+  const priority = overrides.priority ?? (Math.random() > 0.72 ? 'high' : Math.random() > 0.5 ? 'normal' : 'low')
+  const source = overrides.source ?? (Math.random() > 0.6 ? 'meeting' : Math.random() > 0.45 ? 'chat' : 'system')
+  const note = overrides.note ?? 'Waiting for intake review.'
 
   return {
     id,
-    label: templates[Math.floor(Math.random() * templates.length)],
+    label: overrides.label ?? templates[Math.floor(Math.random() * templates.length)],
     type,
+    priority,
+    source,
+    note,
     difficulty: 45 + Math.floor(Math.random() * 46),
     reward: 8 + Math.floor(Math.random() * 10),
     state: 'queued',
@@ -295,6 +323,10 @@ function createTask(id: number): Task {
 
 function makeInitialTasks() {
   return Array.from({ length: 8 }, (_, index) => createTask(index + 1))
+}
+
+function priorityRank(priority: TaskPriority) {
+  return priority === 'high' ? 0 : priority === 'normal' ? 1 : 2
 }
 
 function getRoute(agent: Agent) {
@@ -373,6 +405,11 @@ function App() {
   const [tasks, setTasks] = useState(makeInitialTasks)
   const [selectedTask, setSelectedTask] = useState<number | null>(1)
   const [nextTaskId, setNextTaskId] = useState(9)
+  const [requestTitle, setRequestTitle] = useState('Approve the new dashboard layout')
+  const [requestType, setRequestType] = useState<TaskType>('plan')
+  const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
+  const [requestSource, setRequestSource] = useState<TaskSource>('chat')
+  const [requestNote, setRequestNote] = useState('Short brief, clear handoff, confirm before live execution.')
   const [metrics, setMetrics] = useState<Metrics>({
     day: 1,
     done: 0,
@@ -390,7 +427,9 @@ function App() {
   const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(null)
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
-  const queuedTasks = tasks.filter((task) => task.state === 'queued')
+  const queuedTasks = tasks
+    .filter((task) => task.state === 'queued')
+    .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority) || b.id - a.id)
   const activeTasks = tasks.filter((task) => task.state === 'active')
   const visibleZoSessions = zoSessions.slice(0, 4)
   const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
@@ -504,11 +543,11 @@ function App() {
         agentId,
         status: 'pending' as const,
         output: 'This task is staged locally. Confirm before sending a real request to Zo Computer.',
-        summary: `${assignedAgent.name} is ready to send ${taskLabels[selected.type]} work to Zo Computer.`,
+        summary: `${assignedAgent.name} is ready to take this request from the inbox.`,
         insights: [
           { label: 'Pipeline', value: taskLabels[selected.type] },
           { label: 'Agent', value: assignedAgent.name },
-          { label: 'Status', value: 'Needs confirm' },
+          { label: 'Priority', value: taskPriorityLabels[selected.priority] },
         ],
         actions: roleResultCards[selected.type].sections,
       },
@@ -624,10 +663,20 @@ function App() {
   }
 
   function spawnTask() {
-    const task = createTask(nextTaskId)
+    const task = createTask(nextTaskId, {
+      label: requestTitle.trim() || undefined,
+      type: requestType,
+      priority: requestPriority,
+      source: requestSource,
+      note: requestNote.trim() || undefined,
+    })
     setTasks((currentTasks) => [task, ...currentTasks])
     setNextTaskId((id) => id + 1)
     setSelectedTask(task.id)
+    setRequestTitle(taskTemplates[requestType][0])
+    setRequestPriority('normal')
+    setRequestSource('chat')
+    setRequestNote('')
   }
 
   function endDay() {
@@ -692,13 +741,99 @@ function App() {
         <aside className="panel task-panel">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Inbox</p>
-              <h2>New Requests</h2>
+              <p className="eyebrow">Reception</p>
+              <h2>Task intake</h2>
             </div>
-            <button className="icon-button" onClick={spawnTask} title="Add request">
-              +
-            </button>
+            <span className="load-pill">Triage first</span>
           </div>
+
+          <form
+            className="reception-card"
+            onSubmit={(event) => {
+              event.preventDefault()
+              spawnTask()
+            }}
+          >
+            <label className="intake-field">
+              <span>Request title</span>
+              <input
+                value={requestTitle}
+                onChange={(event) => setRequestTitle(event.target.value)}
+                placeholder="e.g. Review the onboarding flow"
+              />
+            </label>
+
+            <div className="intake-row">
+              <label className="intake-field">
+                <span>Type</span>
+                <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
+                  {Object.entries(taskLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="intake-field">
+                <span>Priority</span>
+                <select
+                  value={requestPriority}
+                  onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}
+                >
+                  {Object.entries(taskPriorityLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="intake-row">
+              <label className="intake-field">
+                <span>Source</span>
+                <select value={requestSource} onChange={(event) => setRequestSource(event.target.value as TaskSource)}>
+                  {Object.entries(taskSourceLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="intake-field">
+                <span>Brief note</span>
+                <input
+                  value={requestNote}
+                  onChange={(event) => setRequestNote(event.target.value)}
+                  placeholder="What should the team know?"
+                />
+              </label>
+            </div>
+
+            <div className="intake-actions">
+              <button type="submit" className="intake-submit">
+                Create task
+              </button>
+              <button
+                type="button"
+                className="intake-secondary"
+                onClick={() => {
+                  setRequestTitle(taskTemplates[requestType][0])
+                  setRequestPriority('high')
+                  setRequestSource('meeting')
+                  setRequestNote('Needs quick triage and handoff.')
+                }}
+              >
+                Use template
+              </button>
+            </div>
+
+            <p className="intake-hint">
+              Reception should capture the request, classify it, then send it to the right agent.
+            </p>
+          </form>
 
           <div className="task-list">
             {queuedTasks.map((task) => (
@@ -707,16 +842,27 @@ function App() {
                 key={task.id}
                 onClick={() => setSelectedTask(task.id)}
               >
-                <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                <div className="task-card-head">
+                  <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                  <span className={`task-pill ${task.priority}`}>{taskPriorityLabels[task.priority]}</span>
+                </div>
                 <strong>{task.label}</strong>
-                <small>Difficulty {task.difficulty} / Reward {task.reward}</small>
+                <small>{task.note}</small>
+                <div className="task-meta">
+                  <span>{taskSourceLabels[task.source]}</span>
+                  <span>Difficulty {task.difficulty}</span>
+                  <span>Reward {task.reward}</span>
+                </div>
               </button>
             ))}
           </div>
 
           <div className="assignment-box">
-            <p className="eyebrow">Assign</p>
+            <p className="eyebrow">Dispatch</p>
             <strong>{selected ? selected.label : 'Select a request'}</strong>
+            <p className="queue-hint">
+              High priority requests are listed first. Research → Plan → Code → Review keeps the flow sane.
+            </p>
             <div className="assign-grid">
               {agents.map((agent) => (
                 <button
@@ -809,7 +955,7 @@ function App() {
                   : '#79e7c5',
               } as React.CSSProperties
             }
-            title="Open Zoo Computer sessions"
+            title="Open control desk sessions"
           >
             <span className="zoo-screen">
               <strong>ZO</strong>

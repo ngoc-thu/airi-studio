@@ -165,6 +165,99 @@ h2 {
   background: #171d2a;
 }
 
+.task-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-pill {
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #10141f;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: #e2e8f0;
+}
+
+.task-pill.low { background: #cbd5e1; }
+.task-pill.normal { background: #fbbf24; }
+.task-pill.high { background: #fb7185; }
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: #8d98aa;
+  font-size: 10px;
+}
+
+.reception-card {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: #171d2a;
+}
+
+.intake-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.intake-field {
+  display: grid;
+  gap: 5px;
+}
+
+.intake-field span, .queue-hint, .intake-hint {
+  color: #8d98aa;
+  font-size: 11px;
+}
+
+.intake-field input, .intake-field select {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #f7fbff;
+  background: #111622;
+}
+
+.intake-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.intake-submit, .intake-secondary {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 900;
+}
+
+.intake-submit {
+  color: #10141f;
+  background: #6ee7b7;
+}
+
+.intake-secondary {
+  color: #f7fbff;
+  background: #2a3346;
+}
+
+.queue-hint, .intake-hint {
+  margin: 0;
+  line-height: 1.4;
+}
+
 .task-card.selected {
   border-color: #79e7c5;
   background: #1b2634;
