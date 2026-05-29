@@ -115,15 +115,16 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 320px minmax(540px, 1fr) 340px;
+  grid-template-columns: 320px minmax(0, 1fr) 340px;
   gap: 18px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .panel {
   border-radius: 8px;
   padding: 16px;
-  min-height: calc(100vh - 126px);
+  min-height: auto;
+  align-self: start;
 }
 
 .panel-head {
@@ -321,7 +322,6 @@ h2 {
 }
 
 .office {
-  min-height: calc(100vh - 126px);
   position: relative;
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.14);
@@ -331,6 +331,9 @@ h2 {
     url("/furniture/wall-tile.png"),
     #20283a;
   background-size: auto, 32px 32px, auto;
+  aspect-ratio: 16 / 11;
+  min-height: clamp(680px, calc(100vh - 126px), 920px);
+  max-height: calc(100vh - 126px);
   image-rendering: pixelated;
 }
 
@@ -1298,6 +1301,8 @@ h2 {
   .panel,
   .office {
     min-height: auto;
+    max-height: none;
+    aspect-ratio: auto;
   }
 
   .office {
