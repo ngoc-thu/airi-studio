@@ -115,7 +115,7 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 360px;
+  grid-template-columns: 320px minmax(0, 1fr) 380px;
   gap: 18px;
   align-items: start;
   max-width: 1560px;
@@ -1148,21 +1148,9 @@ h2 {
   background: var(--agent-color);
 }
 
-.zoo-panel {
+.operations-card {
   display: grid;
   gap: 12px;
-  margin-top: 0;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(17, 22, 34, 0.96);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
-}
-
-.sticky-bar {
-  position: sticky;
-  top: 16px;
-  z-index: 5;
 }
 
 .control-tabs {
@@ -1372,10 +1360,6 @@ h2 {
     min-height: auto;
     max-height: none;
     aspect-ratio: auto;
-  }
-
-  .sticky-bar {
-    position: static;
   }
 
   .office {

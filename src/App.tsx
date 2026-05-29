@@ -1061,7 +1061,7 @@ function App() {
         </section>
 
         <aside className="right-rail">
-          <section className="panel sticky-bar">
+          <section className="panel operations-card">
             <div className="panel-head compact">
               <div>
                 <p className="eyebrow">Workspace control</p>
