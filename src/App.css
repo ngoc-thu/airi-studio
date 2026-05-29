@@ -122,16 +122,22 @@ h2 {
   margin: 0 auto;
 }
 
+.workspace > * {
+  min-width: 0;
+}
+
 .right-rail {
   display: grid;
   gap: 18px;
   align-content: start;
+  min-width: 0;
 }
 
 .panel {
   border-radius: 8px;
   padding: 16px;
   min-height: auto;
+  min-width: 0;
   align-self: start;
 }
 
@@ -1035,7 +1041,7 @@ h2 {
 .zo-result-card,
 .zo-session-list,
 .log-box-compact {
-  max-height: 46vh;
+  max-height: 34vh;
   overflow: auto;
   padding-right: 2px;
 }
@@ -1163,8 +1169,8 @@ h2 {
 .operations-card .zo-result-card,
 .operations-card .zo-session-list,
 .operations-card .log-box-compact {
-  max-height: none;
-  overflow: visible;
+  max-height: 34vh;
+  overflow: auto;
   margin-top: 0;
 }
 
@@ -1358,6 +1364,16 @@ h2 {
   color: #aeb8c8;
   font-size: 12px;
   line-height: 1.45;
+}
+
+@media (max-width: 1440px) {
+  .workspace {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  .right-rail {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 1180px) {
