@@ -906,6 +906,12 @@ h2 {
   background: #171d2a;
 }
 
+.agent-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
 .agent-card.selected {
   border-color: #79e7c5;
   background: #1b2634;
@@ -1028,8 +1034,14 @@ h2 {
   padding-right: 2px;
 }
 
+.zo-result-card,
+.zo-session-list,
 .log-box-compact {
-  margin-top: 0;
+  margin-top: 10px;
+}
+
+.log-box-compact {
+  margin-top: 10px;
   padding-top: 0;
   border-top: 0;
 }
@@ -1138,9 +1150,22 @@ h2 {
 }
 
 .zoo-panel {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 12px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.sticky-bar {
+  position: sticky;
+  top: 16px;
+  z-index: 5;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(17, 22, 34, 0.96);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
 }
 
 .control-tabs {
@@ -1350,6 +1375,10 @@ h2 {
     min-height: auto;
     max-height: none;
     aspect-ratio: auto;
+  }
+
+  .sticky-bar {
+    position: static;
   }
 
   .office {
