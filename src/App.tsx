@@ -551,7 +551,10 @@ function App() {
     .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority) || b.id - a.id)
   const activeTasks = tasks.filter((task) => task.state === 'active')
   const visibleZoSessions = zoSessions.slice(0, 4)
-  const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
+  const selectedZoSession = selectedZoTaskId == null
+    ? null
+    : (zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? null)
+  const activeZoSession = selectedZoSession ?? visibleZoSessions[0] ?? null
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks))
@@ -1908,8 +1911,8 @@ function App() {
               <p className="eyebrow">Zo handoff</p>
               <h2>Sessions</h2>
             </div>
-            <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
-              {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
+            <span className={activeZoSession ? `zo-status ${activeZoSession.status}` : 'zo-status'}>
+              {activeZoSession ? zoStatusLabels[activeZoSession.status] : 'Ready'}
             </span>
           </div>
 
@@ -1921,7 +1924,7 @@ function App() {
                     const agent = agents.find((item) => item.id === session.agentId)
                     return (
                       <button
-                        className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
+                        className={activeZoSession?.taskId === session.taskId ? 'selected' : ''}
                         key={session.taskId}
                         onClick={() => setSelectedZoTaskId(session.taskId)}
                         style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
@@ -1936,28 +1939,28 @@ function App() {
                 </div>
               </section>
 
-              {selectedZoSession ? (
+              {activeZoSession ? (
                 <section className="menu-card">
                   <div className="zo-result-card menu-zo-result">
                     <div className="zo-session-banner">
                       <div>
                         <p className="eyebrow">Zoo Computer session</p>
-                        <strong>{selectedZoSession.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Pending session link'}</strong>
-                        <small>{selectedZoSession.status === 'done' ? 'Research finished. You can continue this same session.' : 'This session is still active in the research flow.'}</small>
+                        <strong>{activeZoSession.conversationId ? `Session ${activeZoSession.conversationId}` : 'Pending session link'}</strong>
+                        <small>{activeZoSession.status === 'done' ? 'Research finished. You can continue this same session.' : 'This session is still active in the research flow.'}</small>
                       </div>
                       <button
                         type="button"
                         className="zo-continue-button"
-                        disabled={!selectedZoSession.conversationId || !zoFollowUp.trim()}
-                        onClick={() => void continueZoSession(selectedZoSession)}
+                        disabled={!activeZoSession.conversationId || !zoFollowUp.trim()}
+                        onClick={() => void continueZoSession(activeZoSession)}
                       >
                         Continue session
                       </button>
                     </div>
 
-                    {selectedZoSession.messages?.length ? (
+                    {activeZoSession.messages?.length ? (
                       <div className="zo-thread">
-                        {selectedZoSession.messages.map((message) => (
+                        {activeZoSession.messages.map((message) => (
                           <article key={message.id} className={`zo-thread-message ${message.role}`}>
                             <small>{message.role === 'user' ? 'You' : message.role === 'assistant' ? 'Zoo Computer' : 'System'}</small>
                             {message.title ? <strong>{message.title}</strong> : null}
@@ -1968,15 +1971,15 @@ function App() {
                     ) : null}
 
                     <div className="zo-result-head">
-                      <span className={`task-type ${selectedZoSession.taskType}`}>{roleResultCards[selectedZoSession.taskType].summaryLabel}</span>
-                      {selectedZoSession.confidence ? <strong>{selectedZoSession.confidence}% confidence</strong> : null}
+                      <span className={`task-type ${activeZoSession.taskType}`}>{roleResultCards[activeZoSession.taskType].summaryLabel}</span>
+                      {activeZoSession.confidence ? <strong>{activeZoSession.confidence}% confidence</strong> : null}
                     </div>
 
-                    <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
+                    <p className="zo-summary">{activeZoSession.summary ?? activeZoSession.output}</p>
 
-                    {selectedZoSession.insights?.length ? (
+                    {activeZoSession.insights?.length ? (
                       <div className="zo-insights">
-                        {selectedZoSession.insights.map((insight) => (
+                        {activeZoSession.insights.map((insight) => (
                           <div key={`${insight.label}-${insight.value}`}>
                             <span>{insight.label}</span>
                             <strong>{insight.value}</strong>
@@ -1996,28 +1999,28 @@ function App() {
                       </label>
                     </div>
 
-                    {selectedZoSession.actions?.length ? (
+                    {activeZoSession.actions?.length ? (
                       <div className="zo-actions">
                         <span>Continue from this session</span>
                         <ol>
-                          {selectedZoSession.actions.map((action, index) => (
+                          {activeZoSession.actions.map((action, index) => (
                             <li key={`${action}-${index}`}>{action}</li>
                           ))}
                         </ol>
                       </div>
                     ) : null}
 
-                    {selectedZoSession.status === 'pending' ? (
+                    {activeZoSession.status === 'pending' ? (
                       <div className="zo-confirm-actions">
-                        <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
-                        <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
+                        <button onClick={() => confirmZoTask(activeZoSession)}>Yes, send to Zo</button>
+                        <button onClick={() => cancelZoTask(activeZoSession)}>No, keep local</button>
                       </div>
                     ) : null}
 
                     <details className="zo-output">
                       <summary>Full session output</summary>
-                      <p>{selectedZoSession.output}</p>
-                      {selectedZoSession.conversationId ? <small>Conversation {selectedZoSession.conversationId}</small> : null}
+                      <p>{activeZoSession.output}</p>
+                      {activeZoSession.conversationId ? <small>Conversation {activeZoSession.conversationId}</small> : null}
                     </details>
                   </div>
                 </section>
