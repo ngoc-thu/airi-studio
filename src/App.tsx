@@ -63,6 +63,13 @@ type ZoInsight = {
   value: string
 }
 
+type ZoSessionMessage = {
+  id: string
+  role: 'system' | 'user' | 'assistant'
+  title?: string
+  body: string
+}
+
 type ZoSession = {
   taskId: number
   taskLabel: string
@@ -75,38 +82,41 @@ type ZoSession = {
   actions?: string[]
   confidence?: number
   conversationId?: string | null
+  messages?: ZoSessionMessage[]
 }
 
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
-  inbox: { x: 12, y: 76, label: 'Inbox' },
-  library: { x: 21, y: 25, label: 'Research Zone' },
-  planning: { x: 39, y: 70, label: 'Plan Zone' },
-  terminal: { x: 55, y: 62, label: 'Code Zone' },
-  review: { x: 79, y: 38, label: 'Review Zone' },
+  inbox: { x: 12, y: 76, label: 'Welcome desk' },
+  library: { x: 21, y: 25, label: 'Document archive' },
+  planning: { x: 24, y: 73, label: 'Meeting area' },
+  terminal: { x: 56, y: 58, label: 'Zoo Computer' },
+  review: { x: 82, y: 24, label: 'Log station' },
 }
 
 const furniture = [
-  { src: '/furniture/table-orange.png', x: 20, y: 28, w: 92, label: 'Research command desk' },
-  { src: '/furniture/monitor-desk.png', x: 17, y: 25, w: 72, label: 'Research left monitor' },
-  { src: '/furniture/monitor-desk.png', x: 23, y: 25, w: 72, label: 'Research right monitor' },
-  { src: '/furniture/board-wide.png', x: 17, y: 14, w: 82, label: 'Research planning board' },
-  { src: '/furniture/bookshelf.png', x: 30, y: 18, w: 48, label: 'Research books' },
-  { src: '/furniture/bookshelf-tall.png', x: 6, y: 80, w: 44, label: 'Lounge shelf' },
-  { src: '/furniture/couch-blue.png', x: 16, y: 79, w: 86, label: 'Lounge couch' },
-  { src: '/furniture/table-orange.png', x: 23, y: 84, w: 42, label: 'Lounge coffee table' },
-  { src: '/furniture/work-desk.png', x: 53, y: 49, w: 126, label: 'Code command desk' },
-  { src: '/furniture/terminal.png', x: 51, y: 45, w: 76, label: 'Code main terminal' },
-  { src: '/furniture/screen-wide.png', x: 44, y: 48, w: 60, label: 'Code left screen' },
-  { src: '/furniture/screen-wide.png', x: 61, y: 48, w: 60, label: 'Code right screen' },
-  { src: '/furniture/server-small.png', x: 39, y: 50, w: 44, label: 'Code server stack A' },
-  { src: '/furniture/server-small.png', x: 43, y: 50, w: 44, label: 'Code server stack B' },
-  { src: '/furniture/chair-orange.png', x: 52, y: 58, w: 34, label: 'Code chair' },
-  { src: '/furniture/green-board.png', x: 79, y: 18, w: 102, label: 'Review board' },
-  { src: '/furniture/table-orange.png', x: 80, y: 32, w: 58, label: 'Review desk' },
-  { src: '/furniture/cabinet.png', x: 88, y: 77, w: 70, label: 'Review rack' },
-  { src: '/furniture/screen-wide.png', x: 78, y: 78, w: 50, label: 'Review status screen' },
-  { src: '/furniture/server-small.png', x: 83, y: 66, w: 42, label: 'Review node' },
-  { src: '/furniture/terminal.png', x: 76, y: 70, w: 36, label: 'Review terminal' },
+  { src: '/furniture/bookshelf-tall.png', x: 11, y: 20, w: 48, label: 'Archive shelf left' },
+  { src: '/furniture/bookshelf.png', x: 19, y: 18, w: 48, label: 'Archive shelf center' },
+  { src: '/furniture/bookshelf-tall.png', x: 28, y: 21, w: 48, label: 'Archive shelf right' },
+  { src: '/furniture/board-wide.png', x: 21, y: 11, w: 82, label: 'Document index board' },
+  { src: '/furniture/cabinet.png', x: 31, y: 27, w: 54, label: 'Archive cabinet' },
+  { src: '/furniture/couch-blue.png', x: 18, y: 76, w: 82, label: 'Meeting couch left' },
+  { src: '/furniture/couch-blue.png', x: 31, y: 76, w: 82, label: 'Meeting couch right' },
+  { src: '/furniture/table-orange.png', x: 24, y: 79, w: 56, label: 'Meeting coffee table' },
+  { src: '/furniture/green-board.png', x: 37, y: 64, w: 72, label: 'Planning board' },
+  { src: '/furniture/work-desk.png', x: 56, y: 51, w: 126, label: 'Zoo command desk' },
+  { src: '/furniture/terminal.png', x: 56, y: 45, w: 74, label: 'Zoo primary terminal' },
+  { src: '/furniture/screen-wide.png', x: 47, y: 48, w: 58, label: 'Zoo left screen' },
+  { src: '/furniture/screen-wide.png', x: 65, y: 48, w: 58, label: 'Zoo right screen' },
+  { src: '/furniture/server-small.png', x: 45, y: 57, w: 42, label: 'Zoo node A' },
+  { src: '/furniture/server-small.png', x: 69, y: 57, w: 42, label: 'Zoo node B' },
+  { src: '/furniture/chair-orange.png', x: 56, y: 60, w: 34, label: 'Zoo operator chair' },
+  { src: '/furniture/green-board.png', x: 80, y: 14, w: 96, label: 'Log overview board' },
+  { src: '/furniture/table-orange.png', x: 81, y: 27, w: 54, label: 'Ops control desk' },
+  { src: '/furniture/screen-wide.png', x: 76, y: 29, w: 46, label: 'Ops left monitor' },
+  { src: '/furniture/screen-wide.png', x: 86, y: 29, w: 46, label: 'Ops right monitor' },
+  { src: '/furniture/server-small.png', x: 79, y: 36, w: 40, label: 'Log server A' },
+  { src: '/furniture/server-small.png', x: 85, y: 36, w: 40, label: 'Log server B' },
+  { src: '/furniture/cabinet.png', x: 90, y: 23, w: 48, label: 'Incident drawer' },
 ] as const
 
 const baseAgents: Agent[] = [
@@ -296,6 +306,36 @@ const hallwayRoutes: Record<AgentRole, Point[]> = {
   ],
 }
 
+const idleRoamRoutes: Record<AgentRole, Point[]> = {
+  research: [
+    { x: 12, y: 76 },
+    { x: 16, y: 62 },
+    { x: 20, y: 48 },
+    { x: 16, y: 62 },
+  ],
+  plan: [
+    { x: 12, y: 76 },
+    { x: 22, y: 76 },
+    { x: 30, y: 76 },
+    { x: 38, y: 72 },
+    { x: 30, y: 76 },
+  ],
+  code: [
+    { x: 34, y: 76 },
+    { x: 44, y: 70 },
+    { x: 55, y: 69 },
+    { x: 48, y: 74 },
+    { x: 40, y: 76 },
+  ],
+  review: [
+    { x: 69, y: 66 },
+    { x: 73, y: 45 },
+    { x: 79, y: 38 },
+    { x: 75, y: 52 },
+    { x: 69, y: 66 },
+  ],
+}
+
 function createTask(
   id: number,
   overrides: Partial<Pick<Task, 'label' | 'type' | 'priority' | 'source' | 'note'>> = {},
@@ -321,8 +361,55 @@ function createTask(
   }
 }
 
+const STORAGE_KEYS = {
+  tasks: 'airi-studio.tasks',
+  selectedTask: 'airi-studio.selected-task',
+  nextTaskId: 'airi-studio.next-task-id',
+  log: 'airi-studio.log',
+  zoSessions: 'airi-studio.zo-sessions',
+  selectedZoTaskId: 'airi-studio.selected-zo-task-id',
+} as const
+
+function readStoredValue<T>(key: string, fallback: T) {
+  if (typeof window === 'undefined') return fallback
+
+  try {
+    const raw = window.localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 function makeInitialTasks() {
-  return [] as Task[]
+  return readStoredValue<Task[]>(STORAGE_KEYS.tasks, [])
+}
+
+function makeInitialLog() {
+  return readStoredValue<string[]>(STORAGE_KEYS.log, [
+    'Reception is open. Add a request to start the office.',
+    'No mock tasks are loaded; create a real request from the intake form.',
+  ])
+}
+
+function makeInitialZoSessions() {
+  return readStoredValue<ZoSession[]>(STORAGE_KEYS.zoSessions, [])
+}
+
+function makeInitialSelectedTask() {
+  return readStoredValue<number | null>(STORAGE_KEYS.selectedTask, null)
+}
+
+function makeInitialSelectedZoTaskId() {
+  return readStoredValue<number | null>(STORAGE_KEYS.selectedZoTaskId, null)
+}
+
+function makeInitialNextTaskId() {
+  const stored = readStoredValue<number | null>(STORAGE_KEYS.nextTaskId, null)
+  if (typeof stored === 'number' && Number.isFinite(stored) && stored > 0) return stored
+
+  const maxExistingId = makeInitialTasks().reduce((maxId, task) => Math.max(maxId, task.id), 0)
+  return maxExistingId + 1
 }
 
 function priorityRank(priority: TaskPriority) {
@@ -364,6 +451,45 @@ function interpolateRoute(route: Point[], percent: number) {
   return { x: last.x, y: last.y, directionX: 1 }
 }
 
+function getIdleRoamPosition(agent: Agent) {
+  const roamRoute = idleRoamRoutes[agent.id] ?? [stationPositions[agent.station]]
+  const points = roamRoute.length > 1 ? [...roamRoute, roamRoute[0]] : roamRoute
+  const cycleMs = 36_000 + Object.keys(idleRoamRoutes).indexOf(agent.id) * 2_500
+  const walkWindowMs = 7_000
+  const now = Date.now()
+  const cycleOffset = now % cycleMs
+  const isWalking = cycleOffset < walkWindowMs
+
+  if (!isWalking) {
+    const restPoint = roamRoute[0] ?? stationPositions[agent.station]
+    return {
+      x: restPoint.x,
+      y: restPoint.y,
+      targetX: restPoint.x,
+      targetY: restPoint.y,
+      route: points,
+      walking: false,
+      animationRow: 0,
+      phase: 'Idle',
+    }
+  }
+
+  const rawPercent = cycleOffset / walkWindowMs
+  const current = interpolateRoute(points, rawPercent)
+  const target = points.at(-1) ?? stationPositions[agent.station]
+
+  return {
+    x: current.x,
+    y: current.y,
+    targetX: target.x,
+    targetY: target.y,
+    route: points,
+    walking: rawPercent < 0.98,
+    animationRow: current.directionX >= 0 ? 1 : 2,
+    phase: rawPercent < 0.98 ? 'Roaming' : 'Idle',
+  }
+}
+
 function getAgentPosition(agent: Agent, task?: Task) {
   const route = getRoute(agent)
   const target = route.at(-1) ?? stationPositions.inbox
@@ -371,16 +497,7 @@ function getAgentPosition(agent: Agent, task?: Task) {
   const targetY = target.y
 
   if (!task) {
-    return {
-      x: targetX,
-      y: targetY,
-      targetX,
-      targetY,
-      route,
-      walking: false,
-      animationRow: 0,
-      phase: 'Idle',
-    }
+    return getIdleRoamPosition(agent)
   }
 
   const workPercent = Math.min(1, task.progress / task.difficulty)
@@ -401,10 +518,10 @@ function getAgentPosition(agent: Agent, task?: Task) {
 }
 
 function App() {
-  const [agents, setAgents] = useState(baseAgents)
+  const [agents] = useState(baseAgents)
   const [tasks, setTasks] = useState(makeInitialTasks)
-  const [selectedTask, setSelectedTask] = useState<number | null>(null)
-  const [nextTaskId, setNextTaskId] = useState(1)
+  const [selectedTask, setSelectedTask] = useState<number | null>(makeInitialSelectedTask)
+  const [nextTaskId, setNextTaskId] = useState(makeInitialNextTaskId)
   const [requestTitle, setRequestTitle] = useState('Approve the new dashboard layout')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
@@ -418,15 +535,15 @@ function App() {
     happiness: 72,
     credits: 18,
   })
-  const [log, setLog] = useState<string[]>([
-    'Reception is open. Add a request to start the office.',
-    'No mock tasks are loaded; create a real request from the intake form.',
-  ])
+  const [log, setLog] = useState<string[]>(makeInitialLog)
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [selectedAgentId, setSelectedAgentId] = useState<AgentRole | null>(null)
-  const [zoSessions, setZoSessions] = useState<ZoSession[]>([])
-  const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(null)
-  const [rightPanelTab, setRightPanelTab] = useState<'agents' | 'sessions' | 'logs'>('agents')
+  const [zoSessions, setZoSessions] = useState<ZoSession[]>(makeInitialZoSessions)
+  const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(makeInitialSelectedZoTaskId)
+  const [zoFollowUp, setZoFollowUp] = useState('Continue the research with next steps and unresolved questions.')
+  const [zooChatPrompt, setZooChatPrompt] = useState('')
+  const [taskView, setTaskView] = useState<'brief' | 'zoo-chat'>('brief')
+  const [screen, setScreen] = useState<'dashboard' | 'tasks' | 'chat' | 'sessions' | 'documents' | 'logs'>('dashboard')
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
   const queuedTasks = tasks
@@ -435,7 +552,30 @@ function App() {
   const activeTasks = tasks.filter((task) => task.state === 'active')
   const visibleZoSessions = zoSessions.slice(0, 4)
   const selectedZoSession = zoSessions.find((session) => session.taskId === selectedZoTaskId) ?? visibleZoSessions[0]
-  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) ?? agents[0]
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks))
+  }, [tasks])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.selectedTask, JSON.stringify(selectedTask))
+  }, [selectedTask])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.nextTaskId, JSON.stringify(nextTaskId))
+  }, [nextTaskId])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.log, JSON.stringify(log))
+  }, [log])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.zoSessions, JSON.stringify(zoSessions))
+  }, [zoSessions])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.selectedZoTaskId, JSON.stringify(selectedZoTaskId))
+  }, [selectedZoTaskId])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -662,6 +802,256 @@ function App() {
     }
   }
 
+  async function continueZoSession(session: ZoSession, followUpOverride?: string) {
+    const task = tasks.find((item) => item.id === session.taskId)
+    const agent = agents.find((item) => item.id === session.agentId)
+    const followUp = (followUpOverride ?? zoFollowUp).trim()
+
+    if (!task || !agent || !session.conversationId || !followUp) return
+
+    setZoSessions((currentSessions) =>
+      currentSessions.map((item) =>
+        item.taskId === session.taskId
+          ? {
+              ...item,
+              status: 'working',
+              summary: 'Zoo Computer is continuing this session...',
+              output: `Follow-up sent: ${followUp}`,
+              messages: [
+                ...(item.messages ?? []),
+                {
+                  id: `user-${Date.now()}`,
+                  role: 'user',
+                  title: 'Follow-up',
+                  body: followUp,
+                },
+                {
+                  id: `system-${Date.now()}`,
+                  role: 'system',
+                  title: 'Zoo Computer',
+                  body: 'Continuing the current session...',
+                },
+              ],
+            }
+          : item,
+      ),
+    )
+    setLog((items) => [`Continuing Zoo session for ${session.taskLabel}.`, ...items].slice(0, 7))
+
+    try {
+      const response = await fetch('/api/zo-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: {
+            id: task.id,
+            label: task.label,
+            type: session.taskType,
+            difficulty: task.difficulty,
+            reward: task.reward,
+          },
+          agent: {
+            id: agent.id,
+            name: agent.name,
+            title: agent.title,
+          },
+          conversationId: session.conversationId,
+          followUp,
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Zoo session continuation failed.')
+      }
+
+      const output = data?.output ?? 'Zoo Computer returned a follow-up result.'
+      const summary = makeZoSummary(output)
+
+      setZoSessions((currentSessions) =>
+        currentSessions.map((item) =>
+          item.taskId === session.taskId
+            ? {
+                ...item,
+                status: 'done',
+                output,
+                summary,
+                insights: makeZoInsights(task, agent, output),
+                actions: extractZoActions(output, roleResultCards[session.taskType].sections),
+                confidence: data?.confidence ?? item.confidence,
+                conversationId: data?.conversationId ?? session.conversationId,
+                messages: [
+                  ...(item.messages ?? []).filter((message) => !(message.role === 'system' && message.body === 'Continuing the current session...')),
+                  {
+                    id: `assistant-${Date.now()}`,
+                    role: 'assistant',
+                    title: 'Zoo response',
+                    body: output,
+                  },
+                ],
+              }
+            : item,
+        ),
+      )
+      setTasks((currentTasks) =>
+        currentTasks.map((item) =>
+          item.id === task.id
+            ? {
+                ...item,
+                note: `Zoo session continued: ${summary}`,
+              }
+            : item,
+        ),
+      )
+      setLog((items) => [`Zoo session continued for ${task.label}.`, ...items].slice(0, 7))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected Zoo follow-up error.'
+      setZoSessions((currentSessions) =>
+        currentSessions.map((item) =>
+          item.taskId === session.taskId
+            ? {
+                ...item,
+                status: 'failed',
+                output: message,
+                summary: 'Zoo session follow-up did not complete.',
+              }
+            : item,
+        ),
+      )
+      setLog((items) => [`Zoo session follow-up failed for ${session.taskLabel}: ${message}`, ...items].slice(0, 7))
+    }
+  }
+
+  async function sendTaskToResearch(task: Task) {
+    const researcher = agents.find((agent) => agent.id === 'research')
+    if (!researcher) return
+
+    setSelectedZoTaskId(task.id)
+    const researchSession: ZoSession = {
+      taskId: task.id,
+      taskLabel: task.label,
+      taskType: 'research',
+      agentId: 'research',
+      status: 'working',
+      output: 'Zoo Computer accepted the brief. Research intake is now gathering context...',
+      summary: 'Enana is turning the intake brief into a research pass.',
+      insights: [
+        { label: 'Stage', value: 'Research intake' },
+        { label: 'Agent', value: researcher.name },
+        { label: 'Priority', value: taskPriorityLabels[task.priority] },
+      ],
+      actions: roleResultCards.research.sections,
+      messages: [
+        {
+          id: `user-${task.id}`,
+          role: 'user',
+          title: 'Brief created',
+          body: `${task.label}\n\n${task.note}`,
+        },
+        {
+          id: `system-${task.id}`,
+          role: 'system',
+          title: 'Zoo Computer',
+          body: 'Research intake started for this brief.',
+        },
+      ],
+    }
+
+    setZoSessions((currentSessions) => [
+      researchSession,
+      ...currentSessions.filter((session) => session.taskId !== task.id),
+    ].slice(0, 8))
+
+    setLog((items) => [`${task.label} routed to Zoo Computer for research intake.`, ...items].slice(0, 7))
+
+    try {
+      const response = await fetch('/api/zo-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: {
+            id: task.id,
+            label: task.label,
+            type: 'research',
+            difficulty: task.difficulty,
+            reward: task.reward,
+          },
+          agent: {
+            id: researcher.id,
+            name: researcher.name,
+            title: researcher.title,
+          },
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Zoo Computer research intake failed.')
+      }
+
+      const output = data?.output ?? 'Research intake completed.'
+      const summary = makeZoSummary(output)
+
+      setZoSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session.taskId === task.id
+            ? {
+                ...session,
+                status: 'done',
+                output,
+                summary,
+                insights: makeZoInsights(task, researcher, output),
+                actions: extractZoActions(output, roleResultCards.research.sections),
+                confidence: data?.confidence ?? Math.min(98, Math.max(68, researcher.accuracy + 4)),
+                conversationId: data?.conversationId ?? null,
+                messages: [
+                  ...(session.messages ?? []).filter((message) => !(message.role === 'system' && message.body === 'Research intake started for this brief.')),
+                  {
+                    id: `assistant-${task.id}-${Date.now()}`,
+                    role: 'assistant',
+                    title: 'Research brief',
+                    body: output,
+                  },
+                ],
+              }
+            : session,
+        ),
+      )
+      setTasks((currentTasks) =>
+        currentTasks.map((item) =>
+          item.id === task.id
+            ? {
+                ...item,
+                note: `Research brief ready: ${summary}`,
+              }
+            : item,
+        ),
+      )
+      setLog((items) => [`Research intake completed for ${task.label}.`, ...items].slice(0, 7))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected research intake error.'
+      setZoSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session.taskId === task.id
+            ? {
+                ...session,
+                status: 'failed',
+                output: message,
+                summary: 'Research intake did not complete.',
+                insights: [
+                  { label: 'Stage', value: 'Research intake' },
+                  { label: 'Status', value: 'Needs retry' },
+                  { label: 'Agent', value: researcher.name },
+                ],
+                actions: ['Check API/protection settings', 'Retry research intake', 'Continue with manual dispatch'],
+              }
+            : session,
+        ),
+      )
+      setLog((items) => [`Research intake failed for ${task.label}: ${message}`, ...items].slice(0, 7))
+    }
+  }
+
   function spawnTask() {
     const task = createTask(nextTaskId, {
       label: requestTitle.trim() || undefined,
@@ -673,10 +1063,43 @@ function App() {
     setTasks((currentTasks) => [task, ...currentTasks])
     setNextTaskId((id) => id + 1)
     setSelectedTask(task.id)
+    void sendTaskToResearch(task)
     setRequestTitle(taskTemplates[requestType][0])
     setRequestPriority('normal')
     setRequestSource('chat')
     setRequestNote('')
+  }
+
+  function startZooChatTask() {
+    const prompt = zooChatPrompt.trim()
+    if (!prompt) return
+
+    if (selectedZoSession?.conversationId) {
+      setZoFollowUp(prompt)
+      void continueZoSession(selectedZoSession, prompt)
+      setZooChatPrompt('')
+      return
+    }
+
+    const task = createTask(nextTaskId, {
+      label: prompt,
+      type: 'research',
+      priority: 'normal',
+      source: 'chat',
+      note: 'Direct conversation from the Zoo Computer chat area.',
+    })
+
+    setTasks((currentTasks) => [task, ...currentTasks])
+    setNextTaskId((id) => id + 1)
+    setSelectedTask(task.id)
+    setSelectedZoTaskId(task.id)
+    setRequestTitle(prompt.length > 72 ? `${prompt.slice(0, 69)}...` : prompt)
+    setRequestType('research')
+    setRequestPriority('normal')
+    setRequestSource('chat')
+    setRequestNote('Direct conversation from the Zoo Computer chat area.')
+    void sendTaskToResearch(task)
+    setZooChatPrompt('')
   }
 
   function endDay() {
@@ -694,29 +1117,6 @@ function App() {
     setLog((items) => [`Shift ${metrics.day + 1} planning started. Budget refreshed.`, ...items].slice(0, 7))
   }
 
-  function upgradeAgent(agentId: AgentRole) {
-    if (metrics.credits < 12) return
-
-    setAgents((currentAgents) =>
-      currentAgents.map((agent) =>
-        agent.id === agentId
-          ? {
-              ...agent,
-              speed: Number((agent.speed + 0.08).toFixed(2)),
-              accuracy: Math.min(98, agent.accuracy + 2),
-              focus: Math.min(100, agent.focus + 3),
-            }
-          : agent,
-      ),
-    )
-    setMetrics((state) => ({ ...state, credits: state.credits - 12 }))
-  }
-
-  const selectedAgentTask = activeTasks.find((task) => task.assignedTo === selectedAgent?.id) ?? null
-  const selectedAgentTasks = tasks.filter((task) => task.assignedTo === selectedAgent?.id)
-  const selectedAgentProgress = selectedAgentTask
-    ? Math.round(Math.min(100, (selectedAgentTask.progress / selectedAgentTask.difficulty) * 100))
-    : 0
 
   return (
     <main className="game-shell">
@@ -743,23 +1143,56 @@ function App() {
         </button>
       </section>
 
+      <div className="screen-nav" role="tablist" aria-label="Application screens">
+        <button type="button" className={screen === 'dashboard' ? 'active' : ''} onClick={() => setScreen('dashboard')} role="tab" aria-selected={screen === 'dashboard'}>
+          Dashboard
+        </button>
+        <button type="button" className={screen === 'tasks' ? 'active' : ''} onClick={() => setScreen('tasks')} role="tab" aria-selected={screen === 'tasks'}>
+          Tasks
+        </button>
+        <button type="button" className={screen === 'chat' ? 'active' : ''} onClick={() => setScreen('chat')} role="tab" aria-selected={screen === 'chat'}>
+          Chat
+        </button>
+        <button type="button" className={screen === 'sessions' ? 'active' : ''} onClick={() => setScreen('sessions')} role="tab" aria-selected={screen === 'sessions'}>
+          Sessions
+        </button>
+        <button type="button" className={screen === 'documents' ? 'active' : ''} onClick={() => setScreen('documents')} role="tab" aria-selected={screen === 'documents'}>
+          Documents
+        </button>
+        <button type="button" className={screen === 'logs' ? 'active' : ''} onClick={() => setScreen('logs')} role="tab" aria-selected={screen === 'logs'}>
+          System log
+        </button>
+      </div>
+
+      {screen === 'dashboard' ? (
       <section className="workspace">
         <aside className="panel task-panel">
           <div className="panel-head">
             <div>
               <p className="eyebrow">Reception</p>
-              <h2>Task intake</h2>
+              <h2>Brief composer</h2>
             </div>
-            <span className="load-pill">Triage first</span>
+            <span className="load-pill">Auto research</span>
           </div>
 
           <form
-            className="reception-card"
+            className="reception-card brief-composer"
             onSubmit={(event) => {
               event.preventDefault()
               spawnTask()
             }}
           >
+            <div className="composer-flow">
+              <div>
+                <strong>1. Capture the brief</strong>
+                <small>Write the request clearly so Zoo Computer can do the first research pass.</small>
+              </div>
+              <div>
+                <strong>2. Auto-send to research</strong>
+                <small>New tasks go straight to the Zoo Computer, then come back with research context.</small>
+              </div>
+            </div>
+
             <label className="intake-field">
               <span>Request title</span>
               <input
@@ -820,7 +1253,7 @@ function App() {
 
             <div className="intake-actions">
               <button type="submit" className="intake-submit">
-                Create task
+                Create brief + send to Zoo
               </button>
               <button
                 type="button"
@@ -837,7 +1270,7 @@ function App() {
             </div>
 
             <p className="intake-hint">
-              Reception should capture the request, classify it, then send it to the right agent.
+              Every new brief starts with research intake at the Zoo Computer before manual dispatch.
             </p>
           </form>
 
@@ -872,9 +1305,9 @@ function App() {
 
           <div className="assignment-box">
             <p className="eyebrow">Dispatch</p>
-            <strong>{selected ? selected.label : 'Select a request'}</strong>
+            <strong>{selected ? selected.label : 'Select a researched request'}</strong>
             <p className="queue-hint">
-              High priority requests are listed first. Research → Plan → Code → Review keeps the flow sane.
+              New briefs now research first through Zoo Computer, then you can dispatch the task to the right agent.
             </p>
             <div className="assign-grid">
               {agents.map((agent) => (
@@ -953,28 +1386,86 @@ function App() {
               <span>{station.label}</span>
             </div>
           ))}
-          <button
-            className={[
-              'zoo-computer',
-              zoSessions.some((session) => session.status === 'sending' || session.status === 'working')
-                ? 'online'
-                : '',
-            ].filter(Boolean).join(' ')}
-            onClick={() => setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)}
-            style={
-              {
-                '--zoo-color': selectedZoSession
-                  ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
-                  : '#79e7c5',
-              } as React.CSSProperties
-            }
-            title="Open control desk sessions"
-          >
-            <span className="zoo-screen">
-              <strong>ZO</strong>
-              <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
+
+          <button type="button" className="office-area area-meeting" onClick={() => setScreen('tasks')}>
+            <span className="office-area-label">Meeting area</span>
+            <span className="office-area-info">
+              <strong>Meeting & planning</strong>
+              <small>Discuss tasks, review queue, and organize the next work pass.</small>
+              <em>Open Tasks screen</em>
             </span>
-            <span className="zoo-keyboard" />
+          </button>
+
+          <button
+            type="button"
+            className="office-area area-zoo"
+            onClick={() => {
+              setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)
+              setScreen('chat')
+            }}
+          >
+            <span className="office-area-label">Zoo Computer</span>
+            <span className="office-area-info">
+              <strong>Zoo terminal</strong>
+              <small>Connect directly to Zoo Computer and talk through research in a dedicated chat workspace.</small>
+              <em>Open Chat screen</em>
+            </span>
+            <span
+              className={[
+                'zoo-computer',
+                zoSessions.some((session) => session.status === 'sending' || session.status === 'working')
+                  ? 'online'
+                  : '',
+              ].filter(Boolean).join(' ')}
+              style={
+                {
+                  '--zoo-color': selectedZoSession
+                    ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
+                    : '#79e7c5',
+                } as React.CSSProperties
+              }
+            >
+              <span className="zoo-screen">
+                <strong>ZO</strong>
+                <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
+              </span>
+              <span className="zoo-keyboard" />
+            </span>
+          </button>
+
+          <button type="button" className="office-area area-docs" onClick={() => setScreen('documents')}>
+            <span className="office-area-label">Document archive</span>
+            <span className="office-area-info">
+              <strong>Document control</strong>
+              <small>Browse research briefs, saved notes, and the growing studio knowledge base.</small>
+              <em>Open Documents screen</em>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="office-area area-zoo-chat"
+            onClick={() => {
+              setTaskView('zoo-chat')
+              setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)
+              setScreen('chat')
+            }}
+          >
+            <span className="office-area-label">Zoo chat</span>
+            <span className="office-area-info">
+              <strong>Talk to Zoo directly</strong>
+              <small>Open a direct conversation workspace for Zoo Computer with a dedicated chat tab.</small>
+              <em>Open Chat · Zoo computer</em>
+            </span>
+          </button>
+
+          <button type="button" className="office-area area-logs" onClick={() => setScreen('logs')}>
+            <span className="office-area-label">Log station</span>
+            <span className="office-area-info">
+              <strong>Operations log</strong>
+              <small>Monitor recent events, dispatch history, and system-level office activity.</small>
+              <em>Open System log</em>
+            </span>
           </button>
 
           {agents.map((agent, index) => {
@@ -1025,7 +1516,7 @@ function App() {
                 />
                 <strong>{agent.name}</strong>
                 <small>
-                  {assigned ? `${position.phase} ${progress}% ${taskLabels[assigned.type]}` : 'Idle'}
+                  {assigned ? `${position.phase} ${progress}% ${taskLabels[assigned.type]}` : position.phase}
                 </small>
                 {assigned ? <span className={`task-pill ${assigned.priority}`}>{taskPriorityLabels[assigned.priority]}</span> : null}
                 {isInspected ? (
@@ -1060,231 +1551,568 @@ function App() {
           })}
         </section>
 
-        <aside className="right-rail">
-          <section className="panel operations-card">
-            <div className="panel-head compact">
-              <div>
-                <p className="eyebrow">Workspace control</p>
-                <h2>Operations bar</h2>
+      </section>
+      ) : null}
+
+      {screen === 'tasks' ? (
+        <section className="panel app-screen-panel">
+          <div className="panel-head compact">
+            <div>
+              <p className="eyebrow">Task center</p>
+              <h2>Tasks</h2>
+            </div>
+            <span className="load-pill">{queuedTasks.length} queued</span>
+          </div>
+
+          <div className="tasks-screen-grid">
+            <section className="menu-card task-composer-card">
+              <div className="panel-head compact">
+                <div>
+                  <p className="eyebrow">Task intake</p>
+                  <h3>{taskView === 'zoo-chat' ? 'Direct chat with Zoo Computer' : 'Create task in Tasks tab'}</h3>
+                </div>
+                <span className="load-pill">{taskView === 'zoo-chat' ? 'Chat mode' : 'Zoo research first'}</span>
               </div>
-              <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
-                {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
-              </span>
-            </div>
 
-            <div className="control-tabs" role="tablist" aria-label="Workspace controls">
-              <button type="button" className={rightPanelTab === 'agents' ? 'active' : ''} onClick={() => setRightPanelTab('agents')} role="tab" aria-selected={rightPanelTab === 'agents'}>
-                Agents
-              </button>
-              <button type="button" className={rightPanelTab === 'sessions' ? 'active' : ''} onClick={() => setRightPanelTab('sessions')} role="tab" aria-selected={rightPanelTab === 'sessions'}>
-                Sessions
-              </button>
-              <button type="button" className={rightPanelTab === 'logs' ? 'active' : ''} onClick={() => setRightPanelTab('logs')} role="tab" aria-selected={rightPanelTab === 'logs'}>
-                Logs
-              </button>
-            </div>
+              <div className="control-tabs">
+                <button type="button" className="active">
+                  Brief composer
+                </button>
+                <button type="button" onClick={() => setScreen('chat')}>
+                  Open chat
+                </button>
+                <button type="button" onClick={() => setScreen('sessions')}>
+                  Open sessions
+                </button>
+              </div>
 
-            {rightPanelTab === 'agents' && selectedAgent ? (
-              <div className="agent-detail-card">
-                <div className="agent-detail-head">
-                  <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${selectedAgent.pet})` } as React.CSSProperties} />
+              <form
+                className="reception-card brief-composer task-tab-composer"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  spawnTask()
+                }}
+              >
+                <div className="composer-flow">
                   <div>
-                    <p className="eyebrow">Selected agent</p>
-                    <h3>{selectedAgent.name}</h3>
-                    <small>{selectedAgent.title}</small>
+                    <strong>1. Capture the brief</strong>
+                    <small>Create a request here without leaving the Tasks screen.</small>
                   </div>
-                  <span className={`agent-state ${selectedAgentTask ? 'busy' : 'idle'}`}>{selectedAgentTask ? 'Working' : 'Idle'}</span>
+                  <div>
+                    <strong>2. Send to Zoo Computer</strong>
+                    <small>The brief goes straight into research intake, then returns with context for dispatch.</small>
+                  </div>
                 </div>
 
-                <div className="agent-detail-current">
-                  <span>Currently doing</span>
-                  <strong>{selectedAgentTask ? selectedAgentTask.label : 'Waiting for a task from Reception'}</strong>
-                  <small>
-                    {selectedAgentTask
-                      ? `${taskLabels[selectedAgentTask.type]} · ${selectedAgentProgress}% complete · ${taskPriorityLabels[selectedAgentTask.priority]}`
-                      : 'Click a character to inspect their live workload.'}
-                  </small>
+                <label className="intake-field">
+                  <span>Request title</span>
+                  <input
+                    value={requestTitle}
+                    onChange={(event) => setRequestTitle(event.target.value)}
+                    placeholder="e.g. Review the onboarding flow"
+                  />
+                </label>
+
+                <div className="intake-row">
+                  <label className="intake-field">
+                    <span>Type</span>
+                    <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
+                      {Object.entries(taskLabels).map(([value, label]) => (
+                        <option key={`tasks-tab-type-${value}`} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="intake-field">
+                    <span>Priority</span>
+                    <select value={requestPriority} onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}>
+                      {Object.entries(taskPriorityLabels).map(([value, label]) => (
+                        <option key={`tasks-tab-priority-${value}`} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
 
-                <dl className="agent-detail-stats">
-                  <div><dt>Speed</dt><dd>{selectedAgent.speed.toFixed(2)}x</dd></div>
-                  <div><dt>Accuracy</dt><dd>{selectedAgent.accuracy}%</dd></div>
-                  <div><dt>Focus</dt><dd>{selectedAgent.focus}%</dd></div>
-                </dl>
+                <div className="intake-row">
+                  <label className="intake-field">
+                    <span>Source</span>
+                    <select value={requestSource} onChange={(event) => setRequestSource(event.target.value as TaskSource)}>
+                      {Object.entries(taskSourceLabels).map(([value, label]) => (
+                        <option key={`tasks-tab-source-${value}`} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                <div className="agent-detail-tasks">
-                  <span>All assigned tasks</span>
-                  {selectedAgentTasks.length ? (
-                    <ul>
-                      {selectedAgentTasks.map((task) => {
-                        const progress = Math.round(Math.min(100, (task.progress / task.difficulty) * 100))
-                        return (
-                          <li key={task.id}>
-                            <strong>{task.label}</strong>
-                            <small>{taskLabels[task.type]} · {taskPriorityLabels[task.priority]} · {progress}%</small>
-                          </li>
-                        )
-                      })}
-                    </ul>
+                  <label className="intake-field">
+                    <span>Brief note</span>
+                    <input
+                      value={requestNote}
+                      onChange={(event) => setRequestNote(event.target.value)}
+                      placeholder="What should the team know?"
+                    />
+                  </label>
+                </div>
+
+                <div className="intake-actions">
+                  <button type="submit" className="intake-submit">
+                    Create brief + send to Zoo
+                  </button>
+                  <button
+                    type="button"
+                    className="intake-secondary"
+                    onClick={() => {
+                      setRequestTitle(taskTemplates[requestType][0])
+                      setRequestPriority('high')
+                      setRequestSource('meeting')
+                      setRequestNote('Needs quick triage and handoff.')
+                    }}
+                  >
+                    Use template
+                  </button>
+                </div>
+
+                <p className="intake-hint">
+                  Tasks created here use the same auto-research flow as the Dashboard composer.
+                </p>
+              </form>
+            </section>
+
+            <section className="menu-card">
+              <div className="panel-head compact">
+                <div>
+                  <p className="eyebrow">Queue</p>
+                  <h3>Queued tasks</h3>
+                </div>
+              </div>
+              <div className="task-list menu-task-list">
+                {queuedTasks.length ? (
+                  queuedTasks.map((task) => (
+                    <button
+                      className={selectedTask === task.id ? 'task-card selected' : 'task-card'}
+                      key={`menu-queued-${task.id}`}
+                      onClick={() => setSelectedTask(task.id)}
+                    >
+                      <div className="task-card-head">
+                        <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                        <span className={`task-pill ${task.priority}`}>{taskPriorityLabels[task.priority]}</span>
+                      </div>
+                      <strong>{task.label}</strong>
+                      <small>{task.note}</small>
+                      <div className="task-meta">
+                        <span>{taskSourceLabels[task.source]}</span>
+                        <span>Difficulty {task.difficulty}</span>
+                        <span>Reward {task.reward}</span>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <strong>No queued tasks</strong>
+                    <small>Create a new request right here in the Tasks tab.</small>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="menu-card">
+              <div className="panel-head compact">
+                <div>
+                  <p className="eyebrow">Live work</p>
+                  <h3>Agent sessions</h3>
+                </div>
+                <span className="load-pill">{activeTasks.length} active</span>
+              </div>
+              <div className="agent-list compact-agent-list">
+                {agents.map((agent) => {
+                  const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
+                  const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
+                  const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
+
+                  return (
+                    <article
+                      className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
+                      key={agent.id}
+                      onClick={() => setSelectedAgentId(agent.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          setSelectedAgentId(agent.id)
+                        }
+                      }}
+                      style={{ '--agent-color': agent.color } as React.CSSProperties}
+                    >
+                      <div className="agent-card-head">
+                        <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties} />
+                        <div>
+                          <strong>{agent.name}</strong>
+                          <small>{agent.title}</small>
+                        </div>
+                        <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
+                      </div>
+
+                      <div className="agent-task-line">
+                        <span>Current task</span>
+                        <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
+                        <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
+                      </div>
+
+                      {assigned ? (
+                        <div className="agent-progress">
+                          <div className="progress"><span style={{ width: `${progress}%` }} /></div>
+                          <small>{progress}% complete</small>
+                        </div>
+                      ) : null}
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
+          </div>
+        </section>
+      ) : null}
+
+      {screen === 'chat' ? (
+        <section className="chat-screen-panel">
+          <div className="chat-screen-layout">
+            <aside className="chat-history-panel">
+              <div className="chat-history-head">
+                <div>
+                  <p className="eyebrow">Zoo workspace</p>
+                  <h2>Chat</h2>
+                </div>
+                <span className="chat-history-count">{visibleZoSessions.length}</span>
+              </div>
+
+              <button
+                type="button"
+                className="chat-history-new"
+                onClick={() => {
+                  setSelectedZoTaskId(null)
+                  setZooChatPrompt('')
+                }}
+              >
+                New chat
+              </button>
+
+              <div className="chat-history-list">
+                {visibleZoSessions.length ? (
+                  visibleZoSessions.map((session) => {
+                    const agent = agents.find((item) => item.id === session.agentId)
+                    return (
+                      <button
+                        className={selectedZoSession?.taskId === session.taskId ? 'chat-history-item selected' : 'chat-history-item'}
+                        key={`chat-select-${session.taskId}`}
+                        onClick={() => setSelectedZoTaskId(session.taskId)}
+                        style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
+                      >
+                        <strong>{session.taskLabel}</strong>
+                        <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
+                        <small>{session.conversationId ? `Session ${session.conversationId}` : 'New Zoo session'}</small>
+                      </button>
+                    )
+                  })
+                ) : (
+                  <div className="chat-history-empty">
+                    <strong>No chats yet</strong>
+                    <small>Start a new conversation with Zoo Computer.</small>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <section className="chat-conversation-panel">
+              <div className="chat-conversation-head">
+                <div>
+                  <h2>{selectedZoSession?.taskLabel ?? 'New chat'}</h2>
+                  <small>{selectedZoSession?.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Direct conversation with Zoo Computer'}</small>
+                </div>
+                <div className="chat-conversation-actions">
+                  <span className="chat-status-pill">{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</span>
+                  <button type="button" className="chat-link-button" onClick={() => setScreen('sessions')}>
+                    Open full session
+                  </button>
+                </div>
+              </div>
+
+              <div className="chat-thread-shell">
+                <div className="zo-thread zoo-chat-thread chatgpt-thread">
+                  {selectedZoSession?.messages?.length ? (
+                    selectedZoSession.messages.map((message) => (
+                      <article key={`chat-screen-${message.id}`} className={`zo-thread-message chatgpt-message ${message.role}`}>
+                        <div className="chatgpt-message-meta">
+                          <strong>{message.role === 'assistant' ? 'Zoo Computer' : message.role === 'user' ? 'You' : 'System'}</strong>
+                          {message.title ? <small>{message.title}</small> : null}
+                        </div>
+                        <p>{message.body}</p>
+                      </article>
+                    ))
                   ) : (
-                    <p>No tasks are assigned to this agent yet.</p>
+                    <div className="zoo-chat-empty chatgpt-empty">
+                      <strong>How can Zoo Computer help?</strong>
+                      <small>Ask a question, request research, or continue an active thread here.</small>
+                    </div>
                   )}
                 </div>
               </div>
-            ) : null}
 
-            {rightPanelTab === 'sessions' ? (
-              <>
-                {visibleZoSessions.length ? (
-                  <>
-                    <div className="zo-session-list">
-                      {visibleZoSessions.map((session) => {
-                        const agent = agents.find((item) => item.id === session.agentId)
-                        return (
-                          <button
-                            className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
-                            key={session.taskId}
-                            onClick={() => setSelectedZoTaskId(session.taskId)}
-                            style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
-                          >
-                            <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
-                            <strong>{session.taskLabel}</strong>
-                            <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
-                          </button>
-                        )
-                      })}
+              <div className="chat-composer-shell">
+                <div className="chat-quick-actions">
+                  <button type="button" onClick={() => setZooChatPrompt('Summarize the current situation and the most important findings.')}>Summarize</button>
+                  <button type="button" onClick={() => setZooChatPrompt('Continue the research with next steps, risks, and unanswered questions.')}>Next steps</button>
+                  <button type="button" onClick={() => setZooChatPrompt('List the main risks, blockers, and assumptions here.')}>Risks</button>
+                </div>
+
+                <form
+                  className="zoo-chat-input chatgpt-composer"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    startZooChatTask()
+                  }}
+                >
+                  <textarea
+                    value={zooChatPrompt}
+                    onChange={(event) => setZooChatPrompt(event.target.value)}
+                    placeholder={selectedZoSession?.conversationId ? 'Message Zoo Computer...' : 'Ask Zoo Computer anything...'}
+                  />
+                  <div className="zoo-chat-actions chatgpt-composer-actions">
+                    <button type="submit" className="intake-submit">
+                      {selectedZoSession?.conversationId ? 'Send' : 'Start chat'}
+                    </button>
+                    <button
+                      type="button"
+                      className="intake-secondary"
+                      onClick={() => setZooChatPrompt('Continue the research with next steps, risks, and unanswered questions.')}
+                    >
+                      Suggest follow-up
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+        </section>
+      ) : null}
+
+      {screen === 'sessions' ? (
+        <section className="panel app-screen-panel">
+          <div className="panel-head compact">
+            <div>
+              <p className="eyebrow">Zo handoff</p>
+              <h2>Sessions</h2>
+            </div>
+            <span className={selectedZoSession ? `zo-status ${selectedZoSession.status}` : 'zo-status'}>
+              {selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}
+            </span>
+          </div>
+
+          {visibleZoSessions.length ? (
+            <div className="workspace-menu-grid sessions-grid">
+              <section className="menu-card">
+                <div className="zo-session-list">
+                  {visibleZoSessions.map((session) => {
+                    const agent = agents.find((item) => item.id === session.agentId)
+                    return (
+                      <button
+                        className={selectedZoSession?.taskId === session.taskId ? 'selected' : ''}
+                        key={session.taskId}
+                        onClick={() => setSelectedZoTaskId(session.taskId)}
+                        style={{ '--agent-color': agent?.color ?? '#79e7c5' } as React.CSSProperties}
+                      >
+                        <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
+                        <strong>{session.taskLabel}</strong>
+                        <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
+                        <small>{session.conversationId ? `Session ${session.conversationId}` : 'New Zoo session'}</small>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {selectedZoSession ? (
+                <section className="menu-card">
+                  <div className="zo-result-card menu-zo-result">
+                    <div className="zo-session-banner">
+                      <div>
+                        <p className="eyebrow">Zoo Computer session</p>
+                        <strong>{selectedZoSession.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Pending session link'}</strong>
+                        <small>{selectedZoSession.status === 'done' ? 'Research finished. You can continue this same session.' : 'This session is still active in the research flow.'}</small>
+                      </div>
+                      <button
+                        type="button"
+                        className="zo-continue-button"
+                        disabled={!selectedZoSession.conversationId || !zoFollowUp.trim()}
+                        onClick={() => void continueZoSession(selectedZoSession)}
+                      >
+                        Continue session
+                      </button>
                     </div>
 
-                    {selectedZoSession ? (
-                      <div className="zo-result-card">
-                        <div className="zo-result-head">
-                          <span className={`task-type ${selectedZoSession.taskType}`}>{roleResultCards[selectedZoSession.taskType].summaryLabel}</span>
-                          {selectedZoSession.confidence ? <strong>{selectedZoSession.confidence}% confidence</strong> : null}
-                        </div>
-
-                        <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
-
-                        {selectedZoSession.insights?.length ? (
-                          <div className="zo-insights">
-                            {selectedZoSession.insights.map((insight) => (
-                              <div key={`${insight.label}-${insight.value}`}>
-                                <span>{insight.label}</span>
-                                <strong>{insight.value}</strong>
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {selectedZoSession.actions?.length ? (
-                          <div className="zo-actions">
-                            <span>Action cards</span>
-                            <ol>
-                              {selectedZoSession.actions.map((action, index) => (
-                                <li key={`${action}-${index}`}>{action}</li>
-                              ))}
-                            </ol>
-                          </div>
-                        ) : null}
-
-                        {selectedZoSession.status === 'pending' ? (
-                          <div className="zo-confirm-actions">
-                            <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
-                            <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
-                          </div>
-                        ) : null}
-
-                        <details className="zo-output">
-                          <summary>Full Zo output</summary>
-                          <p>{selectedZoSession.output}</p>
-                          {selectedZoSession.conversationId ? <small>Conversation {selectedZoSession.conversationId}</small> : null}
-                        </details>
+                    {selectedZoSession.messages?.length ? (
+                      <div className="zo-thread">
+                        {selectedZoSession.messages.map((message) => (
+                          <article key={message.id} className={`zo-thread-message ${message.role}`}>
+                            <small>{message.role === 'user' ? 'You' : message.role === 'assistant' ? 'Zoo Computer' : 'System'}</small>
+                            {message.title ? <strong>{message.title}</strong> : null}
+                            <p>{message.body}</p>
+                          </article>
+                        ))}
                       </div>
                     ) : null}
-                  </>
-                ) : (
-                  <p className="zo-empty">Assign a task to send real work through Zo.</p>
-                )}
-              </>
-            ) : null}
 
-            {rightPanelTab === 'logs' ? (
-              <div className="log-box log-box-compact">
-                <p className="eyebrow">Activity Log</p>
-                {log.map((item, index) => (
-                  <p key={`${item}-${index}`}>{item}</p>
+                    <div className="zo-result-head">
+                      <span className={`task-type ${selectedZoSession.taskType}`}>{roleResultCards[selectedZoSession.taskType].summaryLabel}</span>
+                      {selectedZoSession.confidence ? <strong>{selectedZoSession.confidence}% confidence</strong> : null}
+                    </div>
+
+                    <p className="zo-summary">{selectedZoSession.summary ?? selectedZoSession.output}</p>
+
+                    {selectedZoSession.insights?.length ? (
+                      <div className="zo-insights">
+                        {selectedZoSession.insights.map((insight) => (
+                          <div key={`${insight.label}-${insight.value}`}>
+                            <span>{insight.label}</span>
+                            <strong>{insight.value}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className="zo-follow-up-box">
+                      <label className="intake-field">
+                        <span>Follow-up for this session</span>
+                        <input
+                          value={zoFollowUp}
+                          onChange={(event) => setZoFollowUp(event.target.value)}
+                          placeholder="Ask Zoo Computer to expand, clarify, or continue this same session"
+                        />
+                      </label>
+                    </div>
+
+                    {selectedZoSession.actions?.length ? (
+                      <div className="zo-actions">
+                        <span>Continue from this session</span>
+                        <ol>
+                          {selectedZoSession.actions.map((action, index) => (
+                            <li key={`${action}-${index}`}>{action}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    ) : null}
+
+                    {selectedZoSession.status === 'pending' ? (
+                      <div className="zo-confirm-actions">
+                        <button onClick={() => confirmZoTask(selectedZoSession)}>Yes, send to Zo</button>
+                        <button onClick={() => cancelZoTask(selectedZoSession)}>No, keep local</button>
+                      </div>
+                    ) : null}
+
+                    <details className="zo-output">
+                      <summary>Full session output</summary>
+                      <p>{selectedZoSession.output}</p>
+                      {selectedZoSession.conversationId ? <small>Conversation {selectedZoSession.conversationId}</small> : null}
+                    </details>
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          ) : (
+            <section className="panel app-screen-panel empty-screen-panel">
+              <p className="zo-empty">Assign a task from Dashboard to send real work through Zo.</p>
+            </section>
+          )}
+        </section>
+      ) : null}
+
+      {screen === 'documents' ? (
+        <section className="panel app-screen-panel">
+          <div className="panel-head compact">
+            <div>
+              <p className="eyebrow">Knowledge base</p>
+              <h2>Documents</h2>
+            </div>
+            <span className="load-pill">{queuedTasks.length + zoSessions.length} items</span>
+          </div>
+
+          <div className="workspace-menu-grid">
+            <section className="menu-card">
+              <div className="panel-head compact">
+                <div>
+                  <p className="eyebrow">Brief archive</p>
+                  <h3>Task documents</h3>
+                </div>
+              </div>
+              <div className="task-list menu-task-list">
+                {tasks.slice(0, 8).map((task) => (
+                  <article key={`doc-${task.id}`} className="task-card selected">
+                    <div className="task-card-head">
+                      <span className={`task-type ${task.type}`}>{taskLabels[task.type]}</span>
+                      <span className={`task-pill ${task.priority}`}>{taskPriorityLabels[task.priority]}</span>
+                    </div>
+                    <strong>{task.label}</strong>
+                    <small>{task.note}</small>
+                    <div className="task-meta">
+                      <span>{taskSourceLabels[task.source]}</span>
+                      <span>Difficulty {task.difficulty}</span>
+                      <span>Reward {task.reward}</span>
+                    </div>
+                  </article>
                 ))}
               </div>
-            ) : null}
-          </section>
+            </section>
 
-          <section className="panel agent-stack">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">Departments</p>
-                <h2>Agent status board</h2>
+            <section className="menu-card">
+              <div className="panel-head compact">
+                <div>
+                  <p className="eyebrow">Research notes</p>
+                  <h3>Zoo Computer outputs</h3>
+                </div>
               </div>
-              <span className="load-pill">{activeTasks.length} active</span>
+              <div className="zo-thread">
+                {zoSessions.length ? (
+                  zoSessions.flatMap((session) =>
+                    (session.messages ?? []).slice(-3).map((message) => (
+                      <article key={`${session.taskId}-${message.id}`} className={`zo-thread-message ${message.role}`}>
+                        <small>{session.taskLabel}</small>
+                        {message.title ? <strong>{message.title}</strong> : null}
+                        <p>{message.body}</p>
+                      </article>
+                    )),
+                  )
+                ) : (
+                  <p className="zo-empty">Research outputs will collect here after Zoo Computer sessions start.</p>
+                )}
+              </div>
+            </section>
+          </div>
+        </section>
+      ) : null}
+
+      {screen === 'logs' ? (
+        <section className="panel app-screen-panel">
+          <div className="panel-head compact">
+            <div>
+              <p className="eyebrow">System events</p>
+              <h2>System log</h2>
             </div>
+            <span className="load-pill">{log.length} events</span>
+          </div>
 
-            <div className="agent-list">
-              {agents.map((agent) => {
-                const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
-                const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
-                const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
-
-                return (
-                  <article
-                    className={selectedAgentId === agent.id ? 'agent-card selected' : 'agent-card'}
-                    key={agent.id}
-                    onClick={() => setSelectedAgentId(agent.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        setSelectedAgentId(agent.id)
-                      }
-                    }}
-                    style={{ '--agent-color': agent.color } as React.CSSProperties}
-                  >
-                    <div className="agent-card-head">
-                      <span aria-hidden="true" className="mini-sprite" style={{ '--pet-url': `url(${agent.pet})` } as React.CSSProperties} />
-                      <div>
-                        <strong>{agent.name}</strong>
-                        <small>{agent.title}</small>
-                      </div>
-                      <span className={`agent-state ${assigned ? 'busy' : 'idle'}`}>{statusLabel}</span>
-                    </div>
-
-                    <div className="agent-task-line">
-                      <span>Current task</span>
-                      <strong>{assigned ? taskLabels[assigned.type] : 'No active task'}</strong>
-                      <small>{assigned ? assigned.label : 'Waiting for reception.'}</small>
-                    </div>
-
-                    <dl>
-                      <div><dt>Speed</dt><dd>{agent.speed.toFixed(2)}x</dd></div>
-                      <div><dt>Accuracy</dt><dd>{agent.accuracy}%</dd></div>
-                      <div><dt>Focus</dt><dd>{agent.focus}%</dd></div>
-                    </dl>
-
-                    {assigned ? (
-                      <div className="agent-progress">
-                        <div className="progress"><span style={{ width: `${progress}%` }} /></div>
-                        <small>{progress}% complete</small>
-                      </div>
-                    ) : null}
-
-                    <button disabled={metrics.credits < 12} onClick={() => upgradeAgent(agent.id)}>
-                      Upgrade 12c
-                    </button>
-                  </article>
-                )
-              })}
-            </div>
-          </section>
-        </aside>
-      </section>
+          <div className="log-box log-box-compact menu-log-box">
+            <p className="eyebrow">Activity Log</p>
+            {log.map((item, index) => (
+              <p key={`${item}-${index}`}>{item}</p>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </main>
   )
 }

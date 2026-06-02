@@ -45,23 +45,37 @@ export default async function handler(request, response) {
     const payload = JSON.parse(rawBody || '{}')
     const task = payload.task ?? {}
     const agent = payload.agent ?? {}
+    const conversationId = payload.conversationId ?? payload.conversation_id ?? null
+    const followUp = typeof payload.followUp === 'string' ? payload.followUp.trim() : ''
 
     if (!task.label || !task.type || !agent.name || !agent.title) {
       sendJson(response, 400, { error: 'Missing task or agent fields.' })
       return
     }
 
-    const input = [
-      'You are receiving a real work request from Airi Studio.',
-      `Agent: ${agent.name} (${agent.title})`,
-      `Task type: ${task.type}`,
-      `Task label: ${task.label}`,
-      `Difficulty: ${task.difficulty ?? 'unknown'}`,
-      `Reward: ${task.reward ?? 'unknown'} credits`,
-      '',
-      roleInstructions[task.type] ?? 'Handle the task carefully and return a concise result.',
-      'Return a compact result that can be shown inside the Airi Studio Zoo Computer panel.',
-    ].join('\n')
+    const input = followUp
+      ? [
+          'Continue the existing Airi Studio Zoo Computer session.',
+          `Agent: ${agent.name} (${agent.title})`,
+          `Task label: ${task.label}`,
+          `Task type: ${task.type}`,
+          '',
+          'User follow-up:',
+          followUp,
+          '',
+          'Return a compact follow-up result that can be shown inside the Airi Studio Zoo Computer panel.',
+        ].join('\n')
+      : [
+          'You are receiving a real work request from Airi Studio.',
+          `Agent: ${agent.name} (${agent.title})`,
+          `Task type: ${task.type}`,
+          `Task label: ${task.label}`,
+          `Difficulty: ${task.difficulty ?? 'unknown'}`,
+          `Reward: ${task.reward ?? 'unknown'} credits`,
+          '',
+          roleInstructions[task.type] ?? 'Handle the task carefully and return a concise result.',
+          'Return a compact result that can be shown inside the Airi Studio Zoo Computer panel.',
+        ].join('\n')
 
     const zoResponse = await fetch('https://api.zo.computer/zo/ask', {
       method: 'POST',
@@ -69,7 +83,7 @@ export default async function handler(request, response) {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input }),
+      body: JSON.stringify(conversationId ? { input, conversation_id: conversationId } : { input }),
     })
 
     const responseText = await zoResponse.text()

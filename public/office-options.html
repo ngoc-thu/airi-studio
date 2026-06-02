@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Airi Office Mockup Options</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: rgba(18, 24, 39, 0.94);
+        --panel-2: #171d2a;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f8fbff;
+        --muted: #95a2b8;
+        --teal: #79e7c5;
+        --cyan: #5dd6ff;
+        --pink: #ff7aa8;
+        --green: #7cf28a;
+        --gold: #ffd166;
+        --danger: #fb7185;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(93, 214, 255, 0.12), transparent 30%),
+          linear-gradient(180deg, #0e1424, #090d18 70%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1640px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 20px;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+      .eyebrow {
+        color: var(--teal);
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      .hero p:last-child { color: var(--muted); max-width: 760px; line-height: 1.45; }
+
+      .option-grid {
+        display: grid;
+        gap: 22px;
+      }
+
+      .option-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(11, 16, 32, 0.75);
+        box-shadow: 0 24px 60px rgba(0,0,0,.32);
+        overflow: hidden;
+      }
+
+      .option-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255,255,255,.02);
+      }
+
+      .option-head p { color: var(--muted); margin-top: 6px; }
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(121, 231, 197, .12);
+        border: 1px solid rgba(121, 231, 197, .24);
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .mockup {
+        padding: 18px;
+      }
+
+      .app-frame {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        background: #0f1524;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 240px 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255,255,255,.03);
+      }
+
+      .brand { font-size: 22px; font-weight: 800; }
+      .nav { display: flex; gap: 10px; flex-wrap: wrap; }
+      .nav span {
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #1d2638;
+        color: #cbd5e1;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .nav span.active { background: var(--teal); color: #0f172a; }
+
+      .stats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: end; }
+      .stat {
+        min-width: 76px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #121827;
+      }
+      .stat b { display: block; font-size: 13px; }
+      .stat small { color: var(--muted); font-size: 10px; }
+
+      .content {
+        display: grid;
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 16px;
+        padding: 16px;
+      }
+
+      .side, .office, .subpanel {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+      }
+
+      .side { padding: 14px; display: grid; gap: 14px; }
+      .module { border: 1px solid rgba(255,255,255,.07); border-radius: 12px; background: var(--panel-2); padding: 12px; }
+      .module h4 { margin: 0 0 10px; font-size: 14px; }
+      .field, .task-item, .agent-row, .log-row { border: 1px solid rgba(255,255,255,.06); }
+      .field {
+        height: 34px; border-radius: 8px; background: #0f1523; margin-top: 8px;
+      }
+      .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+      .btn, .btn-dark {
+        border-radius: 8px; padding: 10px 12px; text-align: center; font-weight: 800; font-size: 12px;
+      }
+      .btn { background: var(--teal); color: #0f172a; }
+      .btn-dark { background: #2a3346; color: white; }
+
+      .office-wrap { display: grid; gap: 14px; }
+      .office { position: relative; min-height: 520px; overflow: hidden; }
+      .office-grid {
+        position: absolute; inset: 16px;
+        border-radius: 12px;
+        border: 3px solid rgba(255,255,255,.08);
+        background:
+          linear-gradient(rgba(190, 210, 220, .12), rgba(190, 210, 220, .08)),
+          repeating-linear-gradient(0deg, #283347 0 22px, #243042 22px 44px),
+          repeating-linear-gradient(90deg, #2b364a 0 22px, #243042 22px 44px);
+      }
+      .zone {
+        position: absolute; border: 2px dashed rgba(255,255,255,.18); border-radius: 999px;
+        display: grid; place-items: center; color: rgba(255,255,255,.75); font-size: 11px; font-weight: 700;
+      }
+      .z1 { left: 8%; top: 66%; width: 16%; height: 18%; }
+      .z2 { left: 13%; top: 17%; width: 18%; height: 20%; }
+      .z3 { left: 34%; top: 66%; width: 16%; height: 16%; }
+      .z4 { left: 52%; top: 53%; width: 20%; height: 19%; }
+      .z5 { left: 75%; top: 24%; width: 18%; height: 18%; }
+
+      .furn {
+        position: absolute; border-radius: 10px; background: rgba(20, 27, 40, .9); border: 1px solid rgba(255,255,255,.1);
+        box-shadow: inset 0 -8px 0 rgba(255,255,255,.04);
+      }
+      .desk1 { left: 14%; top: 26%; width: 13%; height: 9%; }
+      .desk2 { left: 50%; top: 50%; width: 18%; height: 10%; }
+      .desk3 { left: 77%; top: 30%; width: 10%; height: 8%; }
+      .lounge { left: 15%; top: 80%; width: 14%; height: 7%; }
+      .rack { left: 79%; top: 70%; width: 10%; height: 10%; }
+      .board { left: 74%; top: 18%; width: 16%; height: 6%; }
+
+      .agent {
+        position: absolute; width: 34px; height: 34px; border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,.35);
+        border: 2px solid rgba(255,255,255,.18);
+      }
+      .a1 { left: 17%; top: 57%; background: var(--cyan); }
+      .a2 { left: 39%; top: 72%; background: var(--pink); }
+      .a3 { left: 57%; top: 66%; background: var(--green); }
+      .a4 { left: 81%; top: 43%; background: var(--gold); }
+
+      .task-bubble {
+        position: absolute; padding: 10px 12px; border-radius: 10px; background: rgba(10,14,24,.88); border: 1px solid rgba(121,231,197,.3);
+        font-size: 11px; line-height: 1.35;
+      }
+      .b1 { left: 61%; top: 42%; }
+      .b2 { left: 80%; top: 56%; }
+
+      .subpanel { padding: 12px; display: grid; gap: 10px; }
+      .task-item, .agent-row, .log-row {
+        border-radius: 10px; background: #161e2d; padding: 10px;
+      }
+      .task-item strong, .agent-row strong { display: block; margin-bottom: 4px; }
+      .muted { color: var(--muted); font-size: 12px; }
+
+      .option-2 .office {
+        background: radial-gradient(circle at 40% 20%, rgba(121,231,197,.12), transparent 26%), #121828;
+      }
+      .option-2 .office-grid {
+        background:
+          linear-gradient(rgba(255, 209, 102, .06), rgba(255, 209, 102, .03)),
+          repeating-linear-gradient(0deg, #2a3347 0 24px, #243041 24px 48px),
+          repeating-linear-gradient(90deg, #314055 0 24px, #263346 24px 48px);
+      }
+      .option-2 .zone { border-style: solid; background: rgba(255,255,255,.03); }
+      .option-2 .furn { border-radius: 6px; }
+      .option-2 .task-bubble { border-color: rgba(255,209,102,.34); }
+
+      .option-3 .content { grid-template-columns: 280px minmax(0, 1fr); }
+      .option-3 .side, .option-3 .office, .option-3 .subpanel { background: rgba(19, 25, 38, .82); }
+      .option-3 .office-grid {
+        background:
+          linear-gradient(rgba(255,255,255,.04), rgba(255,255,255,.01)),
+          linear-gradient(180deg, #263143, #202939);
+      }
+      .option-3 .zone { border-color: rgba(121,231,197,.18); }
+      .option-3 .furn { background: rgba(33, 43, 60, .95); border-radius: 14px; }
+      .option-3 .nav span { background: transparent; border: 1px solid var(--line); }
+      .option-3 .nav span.active { border-color: rgba(121,231,197,.35); }
+
+      @media (max-width: 1100px) {
+        .topbar, .content { grid-template-columns: 1fr; }
+        .stats { justify-content: start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Airi Office redesign mockups</p>
+          <h1>3 option để anh chọn hướng office/dashboard</h1>
+        </div>
+        <p>Mỗi option giữ chung bố cục app: top navigation + reception/task intake + pixel office. Khác nhau ở mood, độ game-feel, độ thoáng và framing của office scene.</p>
+      </section>
+
+      <section class="option-grid">
+        <article class="option-card option-1">
+          <div class="option-head">
+            <div>
+              <h2>Option 1 — Refined current layout</h2>
+              <p>Giữ tinh thần hiện tại, làm sạch spacing, office rộng hơn và panel dễ đọc hơn.</p>
+            </div>
+            <span class="pill">Safe / dễ implement</span>
+          </div>
+          <div class="mockup">
+            <div class="app-frame">
+              <div class="topbar">
+                <div class="brand">Airi Office</div>
+                <div class="nav"><span class="active">Dashboard</span><span>Tasks</span><span>Sessions</span><span>System Log</span></div>
+                <div class="stats">
+                  <div class="stat"><small>Shift</small><b>Day 4</b></div>
+                  <div class="stat"><small>Closed</small><b>12</b></div>
+                  <div class="stat"><small>Blocked</small><b>2</b></div>
+                  <div class="stat"><small>Budget</small><b>36c</b></div>
+                </div>
+              </div>
+              <div class="content">
+                <aside class="side">
+                  <div class="module">
+                    <h4>Reception / Task intake</h4>
+                    <div class="field"></div>
+                    <div class="two"><div class="field"></div><div class="field"></div></div>
+                    <div class="two"><div class="field"></div><div class="field"></div></div>
+                    <div class="btn-row"><div class="btn">Create task</div><div class="btn-dark">Template</div></div>
+                  </div>
+                  <div class="module">
+                    <h4>Queued requests</h4>
+                    <div class="task-item"><strong>Review onboarding flow</strong><div class="muted">Plan · High · Meeting</div></div>
+                    <div class="task-item"><strong>Patch loading state</strong><div class="muted">Code · Normal · Chat</div></div>
+                    <div class="task-item"><strong>Audit release path</strong><div class="muted">Review · High · System</div></div>
+                  </div>
+                </aside>
+                <div class="office-wrap">
+                  <section class="office">
+                    <div class="office-grid"></div>
+                    <div class="zone z1">Inbox</div><div class="zone z2">Research</div><div class="zone z3">Plan</div><div class="zone z4">Code</div><div class="zone z5">Review</div>
+                    <div class="furn desk1"></div><div class="furn desk2"></div><div class="furn desk3"></div><div class="furn lounge"></div><div class="furn rack"></div><div class="furn board"></div>
+                    <div class="agent a1"></div><div class="agent a2"></div><div class="agent a3"></div><div class="agent a4"></div>
+                    <div class="task-bubble b1">Build feature slice<br><span class="muted">73% complete</span></div>
+                    <div class="task-bubble b2">Review pull request<br><span class="muted">55% complete</span></div>
+                  </section>
+                  <section class="subpanel">
+                    <div class="agent-row"><strong>Live team status</strong><div class="muted">Richer quick-read status rail under the office instead of crowding the scene.</div></div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="option-card option-2">
+          <div class="option-head">
+            <div>
+              <h2>Option 2 — Tycoon / management game</h2>
+              <p>Đậm chất game hơn: zone rõ, framing mạnh, nhìn như một studio sim dashboard.</p>
+            </div>
+            <span class="pill">Game feel mạnh</span>
+          </div>
+          <div class="mockup">
+            <div class="app-frame">
+              <div class="topbar">
+                <div class="brand">Airi Studio HQ</div>
+                <div class="nav"><span class="active">Dashboard</span><span>Tasks</span><span>Sessions</span><span>System Log</span></div>
+                <div class="stats">
+                  <div class="stat"><small>Shift</small><b>Day 9</b></div>
+                  <div class="stat"><small>Closed</small><b>28</b></div>
+                  <div class="stat"><small>Morale</small><b>82%</b></div>
+                  <div class="stat"><small>Budget</small><b>84c</b></div>
+                </div>
+              </div>
+              <div class="content">
+                <aside class="side">
+                  <div class="module">
+                    <h4>Mission control</h4>
+                    <div class="field"></div>
+                    <div class="two"><div class="field"></div><div class="field"></div></div>
+                    <div class="btn-row"><div class="btn">Dispatch</div><div class="btn-dark">Auto route</div></div>
+                  </div>
+                  <div class="module">
+                    <h4>Priority queue</h4>
+                    <div class="task-item"><strong>Emergency payment hotfix</strong><div class="muted">Code · High</div></div>
+                    <div class="task-item"><strong>Benchmark model choices</strong><div class="muted">Research · Normal</div></div>
+                    <div class="task-item"><strong>Regression sweep</strong><div class="muted">Review · High</div></div>
+                  </div>
+                </aside>
+                <div class="office-wrap">
+                  <section class="office">
+                    <div class="office-grid"></div>
+                    <div class="zone z1">Inbox Bay</div><div class="zone z2">Intel Desk</div><div class="zone z3">Planner Ring</div><div class="zone z4">Build Floor</div><div class="zone z5">QA Tower</div>
+                    <div class="furn desk1"></div><div class="furn desk2"></div><div class="furn desk3"></div><div class="furn lounge"></div><div class="furn rack"></div><div class="furn board"></div>
+                    <div class="agent a1"></div><div class="agent a2"></div><div class="agent a3"></div><div class="agent a4"></div>
+                    <div class="task-bubble b1">Deploy preview env<br><span class="muted">Ace Taffy routing</span></div>
+                    <div class="task-bubble b2">Catch regression<br><span class="muted">Azuma on QA</span></div>
+                  </section>
+                  <section class="subpanel">
+                    <div class="agent-row"><strong>Department feed</strong><div class="muted">Best if anh muốn game nhìn “sim/tycoon” rõ hơn, có thể thêm station upgrades và department unlocks.</div></div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="option-card option-3">
+          <div class="option-head">
+            <div>
+              <h2>Option 3 — Minimal hybrid</h2>
+              <p>Tối giản hơn, panel sạch hơn, vẫn giữ pixel office nhưng hiện đại và product-like hơn.</p>
+            </div>
+            <span class="pill">Modern / clean</span>
+          </div>
+          <div class="mockup">
+            <div class="app-frame">
+              <div class="topbar">
+                <div class="brand">Airi Office</div>
+                <div class="nav"><span class="active">Dashboard</span><span>Tasks</span><span>Sessions</span><span>System Log</span></div>
+                <div class="stats">
+                  <div class="stat"><small>Shift</small><b>Day 6</b></div>
+                  <div class="stat"><small>Done</small><b>18</b></div>
+                  <div class="stat"><small>Capacity</small><b>240</b></div>
+                  <div class="stat"><small>Budget</small><b>52c</b></div>
+                </div>
+              </div>
+              <div class="content">
+                <aside class="side">
+                  <div class="module">
+                    <h4>New request</h4>
+                    <div class="field"></div>
+                    <div class="two"><div class="field"></div><div class="field"></div></div>
+                    <div class="btn-row"><div class="btn">Create</div><div class="btn-dark">Fill sample</div></div>
+                  </div>
+                  <div class="module">
+                    <h4>Quick queue</h4>
+                    <div class="task-item"><strong>Summarize client brief</strong><div class="muted">Research</div></div>
+                    <div class="task-item"><strong>Draft implementation plan</strong><div class="muted">Plan</div></div>
+                  </div>
+                </aside>
+                <div class="office-wrap">
+                  <section class="office">
+                    <div class="office-grid"></div>
+                    <div class="zone z1">Inbox</div><div class="zone z2">Research</div><div class="zone z3">Plan</div><div class="zone z4">Code</div><div class="zone z5">Review</div>
+                    <div class="furn desk1"></div><div class="furn desk2"></div><div class="furn desk3"></div><div class="furn lounge"></div><div class="furn rack"></div><div class="furn board"></div>
+                    <div class="agent a1"></div><div class="agent a2"></div><div class="agent a3"></div><div class="agent a4"></div>
+                  </section>
+                  <section class="subpanel">
+                    <div class="agent-row"><strong>Notes</strong><div class="muted">Hợp nếu anh muốn app nhìn tinh gọn, dễ scale thêm screens mà không quá “gamey”.</div></div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+  </body>
+</html>
