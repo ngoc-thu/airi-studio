@@ -1210,17 +1210,6 @@ function App() {
               spawnTask()
             }}
           >
-            <div className="composer-flow">
-              <div>
-                <strong>1. Capture the brief</strong>
-                <small>Write the request clearly so Zoo Computer can do the first research pass.</small>
-              </div>
-              <div>
-                <strong>2. Auto-send to research</strong>
-                <small>New tasks go straight to the Zoo Computer, then come back with research context.</small>
-              </div>
-            </div>
-
             <label className="intake-field">
               <span>Request title</span>
               <input
@@ -1565,7 +1554,6 @@ function App() {
                   <p className="eyebrow">Task intake</p>
                   <h3>{taskView === 'zoo-chat' ? 'Direct chat with Zoo Computer' : 'Create task in Tasks tab'}</h3>
                 </div>
-                <span className="load-pill">{taskView === 'zoo-chat' ? 'Chat mode' : 'Zoo research first'}</span>
               </div>
 
               <div className="control-tabs">
@@ -1587,17 +1575,6 @@ function App() {
                   spawnTask()
                 }}
               >
-                <div className="composer-flow">
-                  <div>
-                    <strong>1. Capture the brief</strong>
-                    <small>Create a request here without leaving the Tasks screen.</small>
-                  </div>
-                  <div>
-                    <strong>2. Send to Zoo Computer</strong>
-                    <small>The brief goes straight into research intake, then returns with context for dispatch.</small>
-                  </div>
-                </div>
-
                 <label className="intake-field">
                   <span>Request title</span>
                   <input
@@ -1790,9 +1767,35 @@ function App() {
 
             <section className="chat-conversation-panel">
               <div className="chat-conversation-head">
-                <div>
-                  <h2>{selectedZoSession?.taskLabel ?? 'New chat'}</h2>
-                  <small>{selectedZoSession?.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Direct conversation with Zoo Computer'}</small>
+                <div className="chat-conversation-title">
+                  <div>
+                    <h2>{selectedZoSession?.taskLabel ?? 'New chat'}</h2>
+                    <small>{selectedZoSession?.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Direct conversation with Zoo Computer'}</small>
+                  </div>
+
+                  <div
+                    className={[
+                      'zoo-computer',
+                      'zoo-computer-chat',
+                      selectedZoSession && (selectedZoSession.status === 'sending' || selectedZoSession.status === 'working')
+                        ? 'online'
+                        : '',
+                    ].filter(Boolean).join(' ')}
+                    style={
+                      {
+                        '--zoo-color': selectedZoSession
+                          ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
+                          : '#79e7c5',
+                      } as React.CSSProperties
+                    }
+                    aria-hidden="true"
+                  >
+                    <span className="zoo-screen">
+                      <strong>ZO</strong>
+                      <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
+                    </span>
+                    <span className="zoo-keyboard" />
+                  </div>
                 </div>
                 <div className="chat-conversation-actions">
                   <span className={`chat-status-pill ${chatSignal === 'working' ? 'working' : ''} ${chatSignal === 'received' ? 'received' : ''}`}>
