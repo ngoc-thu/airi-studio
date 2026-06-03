@@ -1667,6 +1667,8 @@ h2 {
 
 .chat-screen-panel {
   min-height: calc(100vh - 220px);
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-screen-layout {
@@ -1674,7 +1676,8 @@ h2 {
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
-  min-height: calc(100vh - 220px);
+  flex: 1;
+  min-height: 0;
 }
 
 .chat-history-panel,
@@ -1688,8 +1691,9 @@ h2 {
 
 .chat-history-panel {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 12px;
-  align-content: start;
+  min-height: 0;
   padding: 16px;
 }
 
@@ -1723,7 +1727,7 @@ h2 {
 .chat-history-list {
   display: grid;
   gap: 8px;
-  max-height: calc(100vh - 380px);
+  min-height: 0;
   overflow: auto;
   padding-right: 4px;
 }
