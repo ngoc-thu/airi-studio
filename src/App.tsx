@@ -1105,6 +1105,28 @@ function App() {
     setRequestPriority('normal')
   }
 
+  function deleteTask(taskId: number) {
+    const task = tasks.find((item) => item.id === taskId)
+    if (!task) return
+
+    const remainingTasks = tasks.filter((item) => item.id !== taskId)
+    const remainingZoSessions = zoSessions.filter((session) => session.taskId !== taskId)
+
+    setTasks(remainingTasks)
+    setZoSessions(remainingZoSessions)
+
+    if (selectedTask === taskId) {
+      const nextSelected = remainingTasks.find((item) => item.state === 'queued') ?? remainingTasks[0] ?? null
+      setSelectedTask(nextSelected?.id ?? null)
+    }
+
+    if (selectedZoTaskId === taskId) {
+      setSelectedZoTaskId(remainingZoSessions[0]?.taskId ?? null)
+    }
+
+    setLog((items) => [`[TASK] ${task.label} was deleted from the workspace.`, ...items].slice(0, 7))
+  }
+
   function startZooChatTask() {
     const prompt = zooChatPrompt.trim()
     if (!prompt) return
@@ -1293,7 +1315,22 @@ function App() {
           </div>
 
           <div className="assignment-box">
-            <p className="eyebrow">Dispatch</p>
+            <div className="assignment-box-head">
+              <p className="eyebrow">Dispatch</p>
+              <button
+                type="button"
+                className="danger-button"
+                disabled={!selected}
+                onClick={() => {
+                  if (!selected) return
+                  const confirmed = window.confirm(`Delete task "${selected.label}"? This will also remove its Zoo session.`)
+                  if (!confirmed) return
+                  deleteTask(selected.id)
+                }}
+              >
+                Delete task
+              </button>
+            </div>
             <strong>{selected ? selected.label : 'Select a researched request'}</strong>
             <p className="queue-hint">
               New briefs now research first through Zoo Computer, then you can dispatch the task to the right agent.
