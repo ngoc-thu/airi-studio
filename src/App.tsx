@@ -99,8 +99,15 @@ const dashboardMascots = [
     name: 'Tata',
     pet: '/pets/tata.webp',
     petCredit: 'Tata by Codex-Pets.net',
-    x: 33,
-    y: 86,
+    x: 36,
+    y: 74,
+    route: [
+      { x: 36, y: 74 },
+      { x: 52, y: 76 },
+      { x: 60, y: 60 },
+      { x: 42, y: 46 },
+      { x: 22, y: 58 },
+    ],
   },
 ] as const
 
@@ -550,6 +557,7 @@ function App() {
     credits: 18,
   })
   const [log, setLog] = useState<string[]>(makeInitialLog)
+  const [mascotTick, setMascotTick] = useState(0)
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [selectedAgentId, setSelectedAgentId] = useState<AgentRole | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>(makeInitialZoSessions)
@@ -588,6 +596,14 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.log, JSON.stringify(log))
   }, [log])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMascotTick((tick) => tick + 1)
+    }, 220)
+
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.zoSessions, JSON.stringify(zoSessions))
@@ -1527,6 +1543,29 @@ function App() {
             </span>
           </button>
 
+          {dashboardMascots.map((mascot) => {
+            const loopRoute = [...mascot.route, mascot.route[0]]
+            const loopPercent = ((Date.now() / 22000) + mascotTick * 0.002) % 1
+            const current = interpolateRoute(loopRoute, loopPercent)
+            const mascotRow = current.directionX >= 0 ? 1 : 2
+
+            return (
+              <div
+                key={mascot.id}
+                className="dashboard-mascot"
+                style={{ left: `${current.x}%`, top: `${current.y}%` } as React.CSSProperties}
+              >
+                <div
+                  aria-label={mascot.petCredit}
+                  className="dashboard-mascot-sprite"
+                  role="img"
+                  style={{ '--pet-url': `url(${mascot.pet})`, '--pet-row': mascotRow } as React.CSSProperties}
+                />
+                <small>{mascot.name}</small>
+              </div>
+            )
+          })}
+
           {agents.map((agent, index) => {
             const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
             const progress = assigned
@@ -1746,8 +1785,21 @@ function App() {
                 {dashboardMascots.map((mascot) => (
             <div
               key={mascot.id}
-              className="dashboard-mascot"
-              style={{ left: `${mascot.x}%`, top: `${mascot.y}%` } as React.CSSProperties}
+              className="dashboard-mascot roaming"
+              style={
+                {
+                  '--start-x': `${mascot.route[0].x}%`,
+                  '--start-y': `${mascot.route[0].y}%`,
+                  '--x1': `${mascot.route[1].x}%`,
+                  '--y1': `${mascot.route[1].y}%`,
+                  '--x2': `${mascot.route[2].x}%`,
+                  '--y2': `${mascot.route[2].y}%`,
+                  '--x3': `${mascot.route[3].x}%`,
+                  '--y3': `${mascot.route[3].y}%`,
+                  '--x4': `${mascot.route[4].x}%`,
+                  '--y4': `${mascot.route[4].y}%`,
+                } as React.CSSProperties
+              }
             >
               <div
                 aria-label={mascot.petCredit}

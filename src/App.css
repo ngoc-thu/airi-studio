@@ -891,29 +891,38 @@ h2 {
 
 .dashboard-mascot {
   position: absolute;
-  width: 86px;
+  left: var(--start-x);
+  top: var(--start-y);
+  width: 72px;
   transform: translate3d(-50%, -50%, 0);
   display: grid;
   justify-items: center;
-  gap: 4px;
-  z-index: 4;
+  gap: 2px;
+  z-index: 12;
   pointer-events: none;
 }
 
 .dashboard-mascot-sprite {
-  width: 64px;
-  height: 64px;
+  --pet-frame: 72px;
+  --pet-frame-height: 78px;
+  width: var(--pet-frame);
+  aspect-ratio: 192 / 208;
   background-image: var(--pet-url);
+  background-position: 0 calc(var(--pet-row, 1) * var(--pet-frame-height) * -1);
   background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: 512px 256px;
+  background-size: 576px 702px;
+  transform: scale(0.78);
+  transform-origin: center bottom;
   image-rendering: pixelated;
-  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.18));
+  animation:
+    pet-safe-frames 0.6s steps(6, end) infinite,
+    idle-bob 2.1s ease-in-out infinite;
 }
 
 .dashboard-mascot small {
   color: #f8fbff;
-  font-size: 11px;
+  font-size: 10px;
   text-shadow: 0 2px 8px rgba(8, 10, 18, 0.7);
 }
 
@@ -1117,6 +1126,7 @@ h2 {
     background-position: calc(var(--pet-frame) * -6) calc(var(--pet-row) * var(--pet-frame-height) * -1);
   }
 }
+
 
 @keyframes agent-click-pop {
   0% {
