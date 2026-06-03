@@ -1,54 +1,70 @@
 # Airi Studio
 
-Airi Studio is a playable pixel management sim about coordinating a small team of anime-style AI agents through research, coding, review, and deploy work.
+Airi Studio is a browser-based React/Vite prototype for managing a small team of anime-style AI agents inside a playful pixel office.
 
-The current build is a browser-based React/Vite prototype. It focuses on the core game loop, the office layout, animated Codex Pets characters, and a lightweight resource system.
+The current build is centered around three connected experiences:
 
-## Interface Preview
+- a **dashboard** with the office map and active work areas
+- a **task intake flow** for creating new tasks
+- a **Zoo Computer chat workspace** for research-first handoff and follow-up conversations
 
-The main screen combines the task queue, pixel office board, agent roster, upgrade controls, and studio log in one management view.
+## What the current build does
 
-![Airi Studio desktop interface](docs/airi-studio-interface.png)
+- Create a new task from the Tasks screen
+- Write the task content in a multiline textarea
+- Choose task type and priority
+- Automatically send new tasks to **Zoo Computer** for research intake first
+- Open a dedicated Zoo chat view to continue the conversation
+- See visible feedback when Zoo is working or has just replied
+- Browse task/session history from the interface
+- Watch the office and agent-themed UI update around the current work state
 
-The layout also adapts for narrow screens, stacking the dashboard, queue, office, and team panels for mobile browsing.
+## Interface overview
 
-![Airi Studio mobile interface](docs/airi-studio-mobile.png)
+### Dashboard
 
-## Gameplay
+The dashboard shows the pixel office and the main work areas, including:
 
-- Pick incoming tasks from the work queue.
-- Assign each task to the agent that best matches the task type.
-- Watch agents move from the inbox to their own work zones.
-- Completed work earns credits.
-- Failed work increases bug debt and reduces team mood.
-- Spend credits to upgrade agent speed, accuracy, and focus.
-- End the day to refresh the token budget and generate a new queue.
+- task intake
+- document archive
+- Zoo Computer
+- Zoo chat
+- log station
+
+The **Zoo chat** tile on the dashboard includes the Zoo computer visual and reflects active status.
+
+### Tasks screen
+
+The Tasks screen is focused on quick task creation:
+
+- **Task content** uses a textarea for multi-line descriptions
+- users pick **Type** and **Priority**
+- new tasks are sent straight to Zoo for research intake
+
+### Chat screen
+
+The Zoo chat screen provides a dedicated conversation UI for follow-ups.
+
+It includes:
+
+- chat history
+- status pills
+- activity banners when Zoo is replying
+- a highlight effect when a new assistant response arrives
+- auto-scroll to the newest message
 
 ## Agents
 
-The team currently uses four anime-style Codex Pets characters:
+The current prototype uses four anime-style Codex Pets characters:
 
-- Enana: Researcher for API mapping, source collection, and planning tasks.
-- Chappy-chan: Coder for feature slices, UI fixes, and state wiring.
-- Azuma: Reviewer for regression checks, edge cases, and PR review tasks.
-- Ace Taffy: DevOps agent for previews, pipelines, deployment, and recovery tasks.
+- **Enana** — research
+- **Ace Taffy** — planning
+- **Chappy** — coding
+- **Azuma** — review
 
 Selected source links are tracked in `public/pets/selected-anime-pets.json`.
 
-## Office Layout
-
-The playable office is arranged as a pixel studio with separate work areas:
-
-- Inbox: task intake and movement starting point.
-- Research Zone: planning table, monitors, board, and bookshelf.
-- Code Zone: central workstation, terminals, screens, servers, and chair.
-- Review Zone: board and review desk.
-- Deploy Zone: rack, status screen, terminal, and deploy node.
-- Lounge corner: couch, shelf, and coffee table for visual depth.
-
-Characters move between the inbox and their assigned stations, then switch into working animations once they arrive.
-
-## Visual Assets
+## Visual assets
 
 Character sprites come from Codex Pets:
 
@@ -61,23 +77,24 @@ Furniture, wall, and floor sprites are selected from SierraAssets' Pixel Art Fur
 
 Some selected pets may be community or fan-inspired. Replace them with original anime-style assets before public or commercial deployment if licensing or brand safety becomes important.
 
-## Tech Stack
+## Tech stack
 
 - React 19
 - TypeScript
 - Vite
-- CSS pixel-art layout and sprite animation
+- CSS-based pixel UI styling and animation
 - Static assets served from `public/`
 
-## Project Structure
+## Project structure
 
 ```text
-src/App.tsx                 Main game state, task loop, agents, stations
-src/App.css                 Pixel office layout, UI panels, sprite animation
+src/App.tsx                 Main app state, task intake, Zoo chat, dashboard UI
+src/App.css                 Layout, office styling, chat UI, sprite animation
 src/index.css               Global theme and base styles
 public/pets/                Character sprites and source metadata
 public/furniture/           Office furniture, wall, floor assets, license
 public/favicon.svg          App favicon
+api/                        Serverless API endpoints used by the app
 ```
 
 ## Development
@@ -91,25 +108,26 @@ The Vite dev server usually starts at `http://127.0.0.1:5173/`. If that port is 
 
 ## Verification
 
-Run both checks before pushing changes:
+Run before pushing changes:
 
 ```bash
-npm run lint
 npm run build
 ```
 
 ## Deployment
 
-The repository is configured for static deployment on Vercel through the Vite build output.
+The repository is configured for deployment on Vercel.
 
 - Repository: `https://github.com/ngoc-thu/airi-studio`
 - Build command: `npm run build`
 - Output directory: `dist`
 
-## Roadmap
+To deploy production manually:
 
-- Improve movement smoothing and sprite timing.
-- Add more office furniture interactions.
-- Add more task types and agent specialties.
-- Add richer day-end summaries and team events.
-- Add persistent save data for upgrades, day count, and office progress.
+```bash
+npx vercel --prod --yes
+```
+
+## Notes
+
+This README reflects the current prototype direction: a lightweight task + chat workspace with a pixel-office presentation, rather than a pure management sim loop.
