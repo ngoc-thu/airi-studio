@@ -2062,6 +2062,14 @@ h2 {
   line-height: 1.22;
 }
 
+.zo-session-preview {
+  margin: 0;
+  color: #dbe6f3;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
 .zo-session-list small,
 .zo-output small,
 .zo-empty,
@@ -2085,6 +2093,15 @@ h2 {
   background:
     linear-gradient(135deg, rgba(121, 231, 197, 0.08), transparent 44%),
     rgba(9, 13, 22, 0.62);
+}
+
+.zo-primary-output {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(121, 231, 197, 0.16);
+  border-radius: 12px;
+  background: rgba(14, 20, 32, 0.88);
 }
 
 .zo-session-banner {
@@ -2181,6 +2198,55 @@ h2 {
   color: #dbe4f0;
   line-height: 1.45;
   white-space: pre-wrap;
+}
+
+.operations-log-box {
+  display: grid;
+  gap: 10px;
+}
+
+.log-entry {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(17, 22, 34, 0.74);
+}
+
+.log-entry.system {
+  border-left-color: #94a3b8;
+}
+
+.log-entry.task {
+  border-left-color: #fbbf24;
+}
+
+.log-entry.zoo {
+  border-left-color: #79e7c5;
+}
+
+.log-entry.error {
+  border-left-color: #fb7185;
+}
+
+.log-entry-tag {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.08);
+  color: #dbe4f0;
+}
+
+.log-entry p {
+  margin: 0;
+  color: #f7fbff;
+  line-height: 1.5;
 }
 
 .zo-result-head {

@@ -87,7 +87,7 @@ type ZoSession = {
 
 const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
   inbox: { x: 12, y: 76, label: 'Welcome desk' },
-  library: { x: 21, y: 25, label: 'Document archive' },
+  library: { x: 21, y: 25, label: 'Files & Docs' },
   planning: { x: 24, y: 73, label: 'Meeting area' },
   terminal: { x: 56, y: 58, label: 'Zoo Computer' },
   review: { x: 82, y: 24, label: 'Log station' },
@@ -236,6 +236,11 @@ function makeZoSummary(output: string) {
 
   if (!firstLine) return 'Zo completed the request.'
   return firstLine.length > 132 ? `${firstLine.slice(0, 129)}...` : firstLine
+}
+
+function getLatestZoAssistantOutput(session: ZoSession) {
+  const latestAssistantMessage = [...(session.messages ?? [])].reverse().find((message) => message.role === 'assistant')
+  return latestAssistantMessage?.body?.trim() || session.summary || session.output
 }
 
 function extractZoActions(output: string, fallback: string[]) {
@@ -387,8 +392,8 @@ function makeInitialTasks() {
 
 function makeInitialLog() {
   return readStoredValue<string[]>(STORAGE_KEYS.log, [
-    'Reception is open. Add a request to start the office.',
-    'No mock tasks are loaded; create a real request from the intake form.',
+    '[SYSTEM] Office ready. Waiting for a new task or Zoo chat request.',
+    '[TASK] No active intake yet. Create a task to start the workflow.',
   ])
 }
 
@@ -522,7 +527,7 @@ function App() {
   const [tasks, setTasks] = useState(makeInitialTasks)
   const [selectedTask, setSelectedTask] = useState<number | null>(makeInitialSelectedTask)
   const [nextTaskId, setNextTaskId] = useState(makeInitialNextTaskId)
-  const [requestTitle, setRequestTitle] = useState('Approve the new dashboard layout')
+  const [requestTitle, setRequestTitle] = useState('')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
   const [metrics, setMetrics] = useState<Metrics>({
@@ -658,8 +663,8 @@ function App() {
           })
 
           setLog((items) => [
-            ...completed.map((task) => `${task.label} shipped. +${task.reward} credits.`),
-            ...failed.map((task) => `${task.label} failed review. Bug debt increased.`),
+            ...completed.map((task) => `[TASK] ${task.label} completed. Reward +${task.reward} credits.`),
+            ...failed.map((task) => `[ERROR] ${task.label} failed review. Bug debt increased and needs follow-up.`),
             ...items,
           ].slice(0, 7))
         }
@@ -688,7 +693,7 @@ function App() {
       tick: (current?.tick ?? 0) + 1,
     }))
     setLog((items) => [
-      `${agent.name} checked in. ${agent.title} focus ${agent.focus}%.`,
+      `[SYSTEM] Agent check-in: ${agent.name} (${agent.title}) is at ${agent.focus}% focus.`,
       ...items,
     ].slice(0, 7))
   }
@@ -726,7 +731,7 @@ function App() {
       ...currentSessions.filter((session) => session.taskId !== selected.id),
     ].slice(0, 8))
     setLog((items) => [
-      `${selected.label} assigned to ${assignedAgent.title}. Waiting for Zo confirmation.`,
+      `[TASK] ${selected.label} assigned to ${assignedAgent.title}. Waiting for Zoo confirmation before live handoff.`,
       ...items,
     ].slice(0, 7))
   }
@@ -734,7 +739,7 @@ function App() {
   function cancelZoTask(session: ZoSession) {
     setZoSessions((currentSessions) => currentSessions.filter((item) => item.taskId !== session.taskId))
     setSelectedZoTaskId((current) => (current === session.taskId ? null : current))
-    setLog((items) => [`Live handoff cancelled for ${session.taskLabel}.`, ...items].slice(0, 7))
+    setLog((items) => [`[SYSTEM] Live handoff cancelled for ${session.taskLabel}. Task remains local only.`, ...items].slice(0, 7))
   }
 
   function confirmZoTask(session: ZoSession) {
@@ -742,7 +747,7 @@ function App() {
     const agent = agents.find((item) => item.id === session.agentId)
     if (!task || !agent || session.status !== 'pending') return
 
-    setLog((items) => [`Confirmed: sending ${task.label} to the live control flow.`, ...items].slice(0, 7))
+    setLog((items) => [`[ZOO] Sending ${task.label} to Zoo Computer for live processing.`, ...items].slice(0, 7))
     void sendTaskToZo(task, agent)
   }
 
@@ -809,7 +814,7 @@ function App() {
             : session,
         ),
       )
-      setLog((items) => [`Live result returned for ${task.label}.`, ...items].slice(0, 7))
+      setLog((items) => [`[ZOO] ${task.label} returned a live result: ${makeZoSummary(output)}`, ...items].slice(0, 7))
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Zo Computer request failed.'
       setZoSessions((currentSessions) =>
@@ -830,7 +835,7 @@ function App() {
             : session,
         ),
       )
-      setLog((items) => [`Live handoff failed for ${task.label}: ${message}`, ...items].slice(0, 7))
+      setLog((items) => [`[ERROR] Live handoff failed for ${task.label}: ${message}`, ...items].slice(0, 7))
     }
   }
 
@@ -868,7 +873,7 @@ function App() {
           : item,
       ),
     )
-    setLog((items) => [`Continuing Zoo session for ${session.taskLabel}.`, ...items].slice(0, 7))
+    setLog((items) => [`[ZOO] Continuing session for ${session.taskLabel} with new follow-up input.`, ...items].slice(0, 7))
 
     try {
       const response = await fetch('/api/zo-task', {
@@ -935,7 +940,7 @@ function App() {
             : item,
         ),
       )
-      setLog((items) => [`Zoo session continued for ${task.label}.`, ...items].slice(0, 7))
+      setLog((items) => [`[ZOO] ${task.label} follow-up completed: ${summary}`, ...items].slice(0, 7))
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected Zoo follow-up error.'
       setZoSessions((currentSessions) =>
@@ -950,7 +955,7 @@ function App() {
             : item,
         ),
       )
-      setLog((items) => [`Zoo session follow-up failed for ${session.taskLabel}: ${message}`, ...items].slice(0, 7))
+      setLog((items) => [`[ERROR] Zoo follow-up failed for ${session.taskLabel}: ${message}`, ...items].slice(0, 7))
     }
   }
 
@@ -994,7 +999,7 @@ function App() {
       ...currentSessions.filter((session) => session.taskId !== task.id),
     ].slice(0, 8))
 
-    setLog((items) => [`${task.label} routed to Zoo Computer for research intake.`, ...items].slice(0, 7))
+    setLog((items) => [`[ZOO] ${task.label} routed to Zoo Computer. Research intake started.`, ...items].slice(0, 7))
 
     try {
       const response = await fetch('/api/zo-task', {
@@ -1059,7 +1064,7 @@ function App() {
             : item,
         ),
       )
-      setLog((items) => [`Research intake completed for ${task.label}.`, ...items].slice(0, 7))
+      setLog((items) => [`[ZOO] Research intake completed for ${task.label}: ${summary}`, ...items].slice(0, 7))
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected research intake error.'
       setZoSessions((currentSessions) =>
@@ -1080,7 +1085,7 @@ function App() {
             : session,
         ),
       )
-      setLog((items) => [`Research intake failed for ${task.label}: ${message}`, ...items].slice(0, 7))
+      setLog((items) => [`[ERROR] Research intake failed for ${task.label}: ${message}`, ...items].slice(0, 7))
     }
   }
 
@@ -1096,7 +1101,7 @@ function App() {
     setNextTaskId((id) => id + 1)
     setSelectedTask(task.id)
     void sendTaskToResearch(task)
-    setRequestTitle(taskTemplates[requestType][0])
+    setRequestTitle('')
     setRequestPriority('normal')
   }
 
@@ -1142,7 +1147,7 @@ function App() {
     setSelectedTask(null)
     setSelectedZoTaskId(null)
     setZoSessions([])
-    setLog((items) => [`Shift ${metrics.day + 1} planning started. Budget refreshed.`, ...items].slice(0, 7))
+    setLog((items) => [`[SYSTEM] Shift ${metrics.day + 1} started. Budget refreshed and local session state reset.`, ...items].slice(0, 7))
   }
 
 
@@ -1185,7 +1190,7 @@ function App() {
           Sessions
         </button>
         <button type="button" className={screen === 'documents' ? 'active' : ''} onClick={() => setScreen('documents')} role="tab" aria-selected={screen === 'documents'}>
-          Documents
+          Files & Docs
         </button>
         <button type="button" className={screen === 'logs' ? 'active' : ''} onClick={() => setScreen('logs')} role="tab" aria-selected={screen === 'logs'}>
           System log
@@ -1249,7 +1254,7 @@ function App() {
 
             <div className="intake-actions">
               <button type="submit" className="intake-submit">
-                Create brief + send to Zoo
+                Create task
               </button>
             </div>
 
@@ -1418,11 +1423,11 @@ function App() {
           </button>
 
           <button type="button" className="office-area area-docs" onClick={() => setScreen('documents')}>
-            <span className="office-area-label">Document archive</span>
+            <span className="office-area-label">Files & Docs</span>
             <span className="office-area-info">
-              <strong>Document control</strong>
-              <small>Browse research briefs, saved notes, and the growing studio knowledge base.</small>
-              <em>Open Documents screen</em>
+              <strong>Stored files and references</strong>
+              <small>Browse files, research briefs, saved notes, and reference materials from Zoo Computer.</small>
+              <em>Open Files & Docs screen</em>
             </span>
           </button>
 
@@ -1634,7 +1639,7 @@ function App() {
 
                 <div className="intake-actions">
                   <button type="submit" className="intake-submit">
-                    Create brief + send to Zoo
+                    Create task
                   </button>
                 </div>
 
@@ -1901,6 +1906,7 @@ function App() {
                 <div className="zo-session-list">
                   {visibleZoSessions.map((session) => {
                     const agent = agents.find((item) => item.id === session.agentId)
+                    const latestOutput = getLatestZoAssistantOutput(session)
                     return (
                       <button
                         className={activeZoSession?.taskId === session.taskId ? 'selected' : ''}
@@ -1911,7 +1917,7 @@ function App() {
                         <span className={`task-type ${session.taskType}`}>{taskLabels[session.taskType]}</span>
                         <strong>{session.taskLabel}</strong>
                         <small>{agent?.name ?? 'Agent'} · {zoStatusLabels[session.status]}</small>
-                        <small>{session.conversationId ? `Session ${session.conversationId}` : 'New Zoo session'}</small>
+                        <p className="zo-session-preview">{makeZoSummary(latestOutput)}</p>
                       </button>
                     )
                   })}
@@ -1954,7 +1960,10 @@ function App() {
                       {activeZoSession.confidence ? <strong>{activeZoSession.confidence}% confidence</strong> : null}
                     </div>
 
-                    <p className="zo-summary">{activeZoSession.summary ?? activeZoSession.output}</p>
+                    <div className="zo-primary-output">
+                      <span className="eyebrow">Latest Zoo output</span>
+                      <p className="zo-summary">{getLatestZoAssistantOutput(activeZoSession)}</p>
+                    </div>
 
                     {activeZoSession.insights?.length ? (
                       <div className="zo-insights">
@@ -2017,8 +2026,8 @@ function App() {
         <section className="panel app-screen-panel">
           <div className="panel-head compact">
             <div>
-              <p className="eyebrow">Knowledge base</p>
-              <h2>Documents</h2>
+              <p className="eyebrow">Files and references</p>
+              <h2>Files & Docs</h2>
             </div>
             <span className="load-pill">{queuedTasks.length + zoSessions.length} items</span>
           </div>
@@ -2082,16 +2091,29 @@ function App() {
           <div className="panel-head compact">
             <div>
               <p className="eyebrow">System events</p>
-              <h2>System log</h2>
+              <h2>Operations log</h2>
             </div>
             <span className="load-pill">{log.length} events</span>
           </div>
 
-          <div className="log-box log-box-compact menu-log-box">
-            <p className="eyebrow">Activity Log</p>
-            {log.map((item, index) => (
-              <p key={`${item}-${index}`}>{item}</p>
-            ))}
+          <div className="log-box log-box-compact menu-log-box operations-log-box">
+            <p className="eyebrow">System actions, Zoo responses, and processing history</p>
+            {log.map((item, index) => {
+              const tone = item.startsWith('[ERROR]')
+                ? 'error'
+                : item.startsWith('[ZOO]')
+                  ? 'zoo'
+                  : item.startsWith('[TASK]')
+                    ? 'task'
+                    : 'system'
+
+              return (
+                <article key={`${item}-${index}`} className={`log-entry ${tone}`}>
+                  <span className="log-entry-tag">{tone}</span>
+                  <p>{item.replace(/^\[(ERROR|ZOO|TASK|SYSTEM)\]\s*/, '')}</p>
+                </article>
+              )
+            })}
           </div>
         </section>
       ) : null}
