@@ -1165,6 +1165,39 @@ h2 {
   }
 }
 
+@keyframes chat-pill-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes chat-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.28);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes chat-message-flash {
+  0% {
+    transform: translateY(8px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes zoo-scan {
   to {
     transform: translateY(100%);
@@ -1738,6 +1771,18 @@ h2 {
   background: #79e7c5;
   font-size: 11px;
   font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.chat-status-pill.working {
+  background: #fbbf24;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.14);
+  animation: chat-pill-pulse 1s ease-in-out infinite;
+}
+
+.chat-status-pill.received {
+  background: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.14);
 }
 
 .chat-link-button {
@@ -1754,6 +1799,34 @@ h2 {
   min-height: 0;
   overflow: hidden;
   background: linear-gradient(180deg, rgba(12, 17, 28, 0.34), rgba(12, 17, 28, 0.16));
+}
+
+.chat-activity-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+}
+
+.chat-activity-banner.working {
+  background: rgba(251, 191, 36, 0.08);
+  color: #fcd34d;
+}
+
+.chat-activity-banner.received {
+  background: rgba(96, 165, 250, 0.08);
+  color: #93c5fd;
+}
+
+.chat-activity-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: chat-dot-pulse 1s ease-in-out infinite;
 }
 
 .chatgpt-thread {
@@ -1783,6 +1856,12 @@ h2 {
 .chatgpt-message.assistant {
   margin-right: auto;
   background: rgba(18, 25, 38, 0.96);
+}
+
+.chatgpt-message.assistant.fresh {
+  border: 1px solid rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.18), 0 16px 34px rgba(59, 130, 246, 0.14);
+  animation: chat-message-flash 1.2s ease;
 }
 
 .chatgpt-message.system {

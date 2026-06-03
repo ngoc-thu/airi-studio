@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 type AgentRole = 'research' | 'plan' | 'code' | 'review'
@@ -525,8 +525,6 @@ function App() {
   const [requestTitle, setRequestTitle] = useState('Approve the new dashboard layout')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
-  const [requestSource, setRequestSource] = useState<TaskSource>('chat')
-  const [requestNote, setRequestNote] = useState('Short brief, clear handoff, confirm before live execution.')
   const [metrics, setMetrics] = useState<Metrics>({
     day: 1,
     done: 0,
@@ -544,6 +542,9 @@ function App() {
   const [zooChatPrompt, setZooChatPrompt] = useState('')
   const [taskView, setTaskView] = useState<'brief' | 'zoo-chat'>('brief')
   const [screen, setScreen] = useState<'dashboard' | 'tasks' | 'chat' | 'sessions' | 'documents' | 'logs'>('dashboard')
+  const [chatSignal, setChatSignal] = useState<'idle' | 'working' | 'received'>('idle')
+  const lastAssistantMessageIdRef = useRef<string | null>(null)
+  const chatThreadRef = useRef<HTMLDivElement | null>(null)
 
   const selected = tasks.find((task) => task.id === selectedTask) ?? null
   const queuedTasks = tasks
@@ -575,6 +576,34 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.zoSessions, JSON.stringify(zoSessions))
   }, [zoSessions])
+
+  useEffect(() => {
+    const session = selectedZoSession
+    if (!session) {
+      setChatSignal('idle')
+      lastAssistantMessageIdRef.current = null
+      return
+    }
+
+    const latestAssistantMessage = [...(session.messages ?? [])].reverse().find((message) => message.role === 'assistant')
+
+    if (session.status === 'working') {
+      setChatSignal('working')
+    } else if (latestAssistantMessage && latestAssistantMessage.id !== lastAssistantMessageIdRef.current) {
+      lastAssistantMessageIdRef.current = latestAssistantMessage.id
+      setChatSignal('received')
+      const timeoutId = window.setTimeout(() => setChatSignal('idle'), 2600)
+      return () => window.clearTimeout(timeoutId)
+    } else {
+      setChatSignal('idle')
+      if (latestAssistantMessage) lastAssistantMessageIdRef.current = latestAssistantMessage.id
+    }
+  }, [selectedZoSession])
+
+  useEffect(() => {
+    if (!chatThreadRef.current) return
+    chatThreadRef.current.scrollTop = chatThreadRef.current.scrollHeight
+  }, [selectedZoSession?.messages, chatSignal])
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.selectedZoTaskId, JSON.stringify(selectedZoTaskId))
@@ -1060,8 +1089,8 @@ function App() {
       label: requestTitle.trim() || undefined,
       type: requestType,
       priority: requestPriority,
-      source: requestSource,
-      note: requestNote.trim() || undefined,
+      source: 'chat',
+      note: 'Short brief, clear handoff, confirm before live execution.',
     })
     setTasks((currentTasks) => [task, ...currentTasks])
     setNextTaskId((id) => id + 1)
@@ -1069,8 +1098,6 @@ function App() {
     void sendTaskToResearch(task)
     setRequestTitle(taskTemplates[requestType][0])
     setRequestPriority('normal')
-    setRequestSource('chat')
-    setRequestNote('')
   }
 
   function startZooChatTask() {
@@ -1099,8 +1126,6 @@ function App() {
     setRequestTitle(prompt.length > 72 ? `${prompt.slice(0, 69)}...` : prompt)
     setRequestType('research')
     setRequestPriority('normal')
-    setRequestSource('chat')
-    setRequestNote('Direct conversation from the Zoo Computer chat area.')
     void sendTaskToResearch(task)
     setZooChatPrompt('')
   }
@@ -1232,43 +1257,9 @@ function App() {
               </label>
             </div>
 
-            <div className="intake-row">
-              <label className="intake-field">
-                <span>Source</span>
-                <select value={requestSource} onChange={(event) => setRequestSource(event.target.value as TaskSource)}>
-                  {Object.entries(taskSourceLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="intake-field">
-                <span>Brief note</span>
-                <input
-                  value={requestNote}
-                  onChange={(event) => setRequestNote(event.target.value)}
-                  placeholder="What should the team know?"
-                />
-              </label>
-            </div>
-
             <div className="intake-actions">
               <button type="submit" className="intake-submit">
                 Create brief + send to Zoo
-              </button>
-              <button
-                type="button"
-                className="intake-secondary"
-                onClick={() => {
-                  setRequestTitle(taskTemplates[requestType][0])
-                  setRequestPriority('high')
-                  setRequestSource('meeting')
-                  setRequestNote('Needs quick triage and handoff.')
-                }}
-              >
-                Use template
               </button>
             </div>
 
@@ -1640,43 +1631,9 @@ function App() {
                   </label>
                 </div>
 
-                <div className="intake-row">
-                  <label className="intake-field">
-                    <span>Source</span>
-                    <select value={requestSource} onChange={(event) => setRequestSource(event.target.value as TaskSource)}>
-                      {Object.entries(taskSourceLabels).map(([value, label]) => (
-                        <option key={`tasks-tab-source-${value}`} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="intake-field">
-                    <span>Brief note</span>
-                    <input
-                      value={requestNote}
-                      onChange={(event) => setRequestNote(event.target.value)}
-                      placeholder="What should the team know?"
-                    />
-                  </label>
-                </div>
-
                 <div className="intake-actions">
                   <button type="submit" className="intake-submit">
                     Create brief + send to Zoo
-                  </button>
-                  <button
-                    type="button"
-                    className="intake-secondary"
-                    onClick={() => {
-                      setRequestTitle(taskTemplates[requestType][0])
-                      setRequestPriority('high')
-                      setRequestSource('meeting')
-                      setRequestNote('Needs quick triage and handoff.')
-                    }}
-                  >
-                    Use template
                   </button>
                 </div>
 
@@ -1838,7 +1795,13 @@ function App() {
                   <small>{selectedZoSession?.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Direct conversation with Zoo Computer'}</small>
                 </div>
                 <div className="chat-conversation-actions">
-                  <span className="chat-status-pill">{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</span>
+                  <span className={`chat-status-pill ${chatSignal === 'working' ? 'working' : ''} ${chatSignal === 'received' ? 'received' : ''}`}>
+                    {chatSignal === 'working'
+                      ? 'Zoo is replying...'
+                      : chatSignal === 'received'
+                        ? 'New response'
+                        : (selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready')}
+                  </span>
                   <button type="button" className="chat-link-button" onClick={() => setScreen('sessions')}>
                     Open full session
                   </button>
@@ -1846,17 +1809,31 @@ function App() {
               </div>
 
               <div className="chat-thread-shell">
-                <div className="zo-thread zoo-chat-thread chatgpt-thread">
+                {chatSignal !== 'idle' ? (
+                  <div className={`chat-activity-banner ${chatSignal}`}>
+                    <span className="chat-activity-dot" />
+                    <strong>{chatSignal === 'working' ? 'Zoo đang phản hồi...' : 'Zoo vừa gửi phản hồi mới'}</strong>
+                  </div>
+                ) : null}
+                <div ref={chatThreadRef} className="zo-thread zoo-chat-thread chatgpt-thread">
                   {selectedZoSession?.messages?.length ? (
-                    selectedZoSession.messages.map((message) => (
-                      <article key={`chat-screen-${message.id}`} className={`zo-thread-message chatgpt-message ${message.role}`}>
+                    selectedZoSession.messages.map((message, index, items) => {
+                      const isLatestAssistant =
+                        message.role === 'assistant' &&
+                        index === items.map((item) => item.role).lastIndexOf('assistant')
+
+                      return (
+                      <article
+                        key={`chat-screen-${message.id}`}
+                        className={`zo-thread-message chatgpt-message ${message.role} ${chatSignal === 'received' && isLatestAssistant ? 'fresh' : ''}`}
+                      >
                         <div className="chatgpt-message-meta">
                           <strong>{message.role === 'assistant' ? 'Zoo Computer' : message.role === 'user' ? 'You' : 'System'}</strong>
                           {message.title ? <small>{message.title}</small> : null}
                         </div>
                         <p>{message.body}</p>
                       </article>
-                    ))
+                    )})
                   ) : (
                     <div className="zoo-chat-empty chatgpt-empty">
                       <strong>How can Zoo Computer help?</strong>
