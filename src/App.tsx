@@ -1863,18 +1863,17 @@ function App() {
                   <textarea
                     value={zooChatPrompt}
                     onChange={(event) => setZooChatPrompt(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        startZooChatTask()
+                      }
+                    }}
                     placeholder={selectedZoSession?.conversationId ? 'Message Zoo Computer...' : 'Ask Zoo Computer anything...'}
                   />
                   <div className="zoo-chat-actions chatgpt-composer-actions">
                     <button type="submit" className="intake-submit">
                       {selectedZoSession?.conversationId ? 'Send' : 'Start chat'}
-                    </button>
-                    <button
-                      type="button"
-                      className="intake-secondary"
-                      onClick={() => setZooChatPrompt('Continue the research with next steps, risks, and unanswered questions.')}
-                    >
-                      Suggest follow-up
                     </button>
                   </div>
                 </form>
