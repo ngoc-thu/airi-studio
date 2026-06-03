@@ -18,5 +18,10 @@
     "id": "ace-taffy",
     "spritesheet": "/pets/ace-taffy.webp",
     "source": "https://pub-4976a79db284484f8d370de741d18cf9.r2.dev/codex-pets/imported/codex-pet-share/ace-taffy/spritesheet.webp"
+  },
+  {
+    "id": "tata",
+    "spritesheet": "/pets/tata.webp",
+    "source": "https://codex-pets.net/assets/pets/tata/spritesheet.webp"
   }
 ]

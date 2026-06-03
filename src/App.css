@@ -889,6 +889,34 @@ h2 {
   animation: zoo-online 0.9s steps(3) infinite;
 }
 
+.dashboard-mascot {
+  position: absolute;
+  width: 86px;
+  transform: translate3d(-50%, -50%, 0);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.dashboard-mascot-sprite {
+  width: 64px;
+  height: 64px;
+  background-image: var(--pet-url);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 512px 256px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.2));
+}
+
+.dashboard-mascot small {
+  color: #f8fbff;
+  font-size: 11px;
+  text-shadow: 0 2px 8px rgba(8, 10, 18, 0.7);
+}
+
 .agent {
   --pet-row: 0;
   position: absolute;
@@ -1897,6 +1925,7 @@ h2 {
   min-height: 0;
   max-height: none;
   display: grid;
+  justify-items: stretch;
   gap: 14px;
   align-content: start;
   align-self: stretch;
@@ -1905,7 +1934,8 @@ h2 {
 }
 
 .chatgpt-message {
-  width: min(100%, 1040px);
+  justify-self: stretch;
+  width: 100%;
   max-width: 100%;
   gap: 8px;
   padding: 16px 18px;
@@ -1916,12 +1946,13 @@ h2 {
 }
 
 .chatgpt-message.user {
-  margin-left: auto;
+  justify-self: end;
+  width: min(100%, 1040px);
   background: rgba(16, 34, 33, 0.88);
 }
 
 .chatgpt-message.assistant {
-  margin-right: auto;
+  justify-self: start;
   width: min(100%, 1120px);
   background: rgba(18, 25, 38, 0.96);
 }
@@ -1933,8 +1964,8 @@ h2 {
 }
 
 .chatgpt-message.system {
+  justify-self: center;
   width: min(100%, 860px);
-  margin: 0 auto;
   border: 1px dashed rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
 }

@@ -93,6 +93,17 @@ const stationPositions: Record<StationId, { x: number; y: number; label: string 
   review: { x: 82, y: 24, label: 'Log station' },
 }
 
+const dashboardMascots = [
+  {
+    id: 'tata',
+    name: 'Tata',
+    pet: '/pets/tata.webp',
+    petCredit: 'Tata by Codex-Pets.net',
+    x: 33,
+    y: 86,
+  },
+] as const
+
 const furniture = [
   { src: '/furniture/bookshelf-tall.png', x: 11, y: 20, w: 48, label: 'Archive shelf left' },
   { src: '/furniture/bookshelf.png', x: 19, y: 18, w: 48, label: 'Archive shelf center' },
@@ -1732,7 +1743,23 @@ function App() {
                 <span className="load-pill">{activeTasks.length} active</span>
               </div>
               <div className="agent-list compact-agent-list">
-                {agents.map((agent) => {
+                {dashboardMascots.map((mascot) => (
+            <div
+              key={mascot.id}
+              className="dashboard-mascot"
+              style={{ left: `${mascot.x}%`, top: `${mascot.y}%` } as React.CSSProperties}
+            >
+              <div
+                aria-label={mascot.petCredit}
+                className="dashboard-mascot-sprite"
+                role="img"
+                style={{ '--pet-url': `url(${mascot.pet})` } as React.CSSProperties}
+              />
+              <small>{mascot.name}</small>
+            </div>
+          ))}
+
+          {agents.map((agent) => {
                   const assigned = activeTasks.find((task) => task.assignedTo === agent.id)
                   const progress = assigned ? Math.round(Math.min(100, (assigned.progress / assigned.difficulty) * 100)) : 0
                   const statusLabel = assigned ? (progress >= 100 ? 'Wrapping up' : 'Working') : 'Idle'
