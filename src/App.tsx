@@ -1211,11 +1211,12 @@ function App() {
             }}
           >
             <label className="intake-field">
-              <span>Request title</span>
-              <input
+              <span>Task content</span>
+              <textarea
                 value={requestTitle}
                 onChange={(event) => setRequestTitle(event.target.value)}
-                placeholder="e.g. Review the onboarding flow"
+                placeholder="Describe the task details..."
+                rows={4}
               />
             </label>
 
@@ -1440,6 +1441,28 @@ function App() {
               <small>Open a direct conversation workspace for Zoo Computer with a dedicated chat tab.</small>
               <em>Open Chat · Zoo computer</em>
             </span>
+            <span
+              className={[
+                'zoo-computer',
+                'zoo-computer-dashboard-chat',
+                activeZoSession && (activeZoSession.status === 'sending' || activeZoSession.status === 'working')
+                  ? 'online'
+                  : '',
+              ].filter(Boolean).join(' ')}
+              style={
+                {
+                  '--zoo-color': activeZoSession
+                    ? agents.find((agent) => agent.id === activeZoSession.agentId)?.color
+                    : '#79e7c5',
+                } as React.CSSProperties
+              }
+            >
+              <span className="zoo-screen">
+                <strong>ZO</strong>
+                <small>{activeZoSession ? zoStatusLabels[activeZoSession.status] : 'Ready'}</small>
+              </span>
+              <span className="zoo-keyboard" />
+            </span>
           </button>
 
           <button type="button" className="office-area area-logs" onClick={() => setScreen('logs')}>
@@ -1576,11 +1599,12 @@ function App() {
                 }}
               >
                 <label className="intake-field">
-                  <span>Request title</span>
-                  <input
+                  <span>Task content</span>
+                  <textarea
                     value={requestTitle}
                     onChange={(event) => setRequestTitle(event.target.value)}
-                    placeholder="e.g. Review the onboarding flow"
+                    placeholder="Describe the task details..."
+                    rows={4}
                   />
                 </label>
 
@@ -1771,30 +1795,6 @@ function App() {
                   <div>
                     <h2>{selectedZoSession?.taskLabel ?? 'New chat'}</h2>
                     <small>{selectedZoSession?.conversationId ? `Session ${selectedZoSession.conversationId}` : 'Direct conversation with Zoo Computer'}</small>
-                  </div>
-
-                  <div
-                    className={[
-                      'zoo-computer',
-                      'zoo-computer-chat',
-                      selectedZoSession && (selectedZoSession.status === 'sending' || selectedZoSession.status === 'working')
-                        ? 'online'
-                        : '',
-                    ].filter(Boolean).join(' ')}
-                    style={
-                      {
-                        '--zoo-color': selectedZoSession
-                          ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
-                          : '#79e7c5',
-                      } as React.CSSProperties
-                    }
-                    aria-hidden="true"
-                  >
-                    <span className="zoo-screen">
-                      <strong>ZO</strong>
-                      <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
-                    </span>
-                    <span className="zoo-keyboard" />
                   </div>
                 </div>
                 <div className="chat-conversation-actions">
