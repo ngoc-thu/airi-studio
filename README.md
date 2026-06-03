@@ -21,6 +21,16 @@ The current build is centered around three connected experiences:
 
 ## Interface overview
 
+## Preview
+
+### Main interface
+
+![Airi Studio main interface](docs/airi-studio-interface.png)
+
+### Mobile / narrow layout
+
+![Airi Studio mobile interface](docs/airi-studio-mobile.png)
+
 ### Dashboard
 
 The dashboard shows the pixel office and the main work areas, including:
@@ -33,9 +43,13 @@ The dashboard shows the pixel office and the main work areas, including:
 
 The **Zoo chat** tile on the dashboard includes the Zoo computer visual and reflects active status.
 
+![Dashboard and office overview](docs/airi-studio-interface.png)
+
 ### Tasks screen
 
 The Tasks screen is focused on quick task creation:
+
+![Tasks and workspace layout](docs/airi-studio-interface.png)
 
 - **Task content** uses a textarea for multi-line descriptions
 - users pick **Type** and **Priority**
@@ -44,6 +58,8 @@ The Tasks screen is focused on quick task creation:
 ### Chat screen
 
 The Zoo chat screen provides a dedicated conversation UI for follow-ups.
+
+![Chat-friendly workspace preview](docs/airi-studio-mobile.png)
 
 It includes:
 
