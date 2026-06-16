@@ -112,29 +112,29 @@ const dashboardMascots = [
 ] as const
 
 const furniture = [
-  { src: '/furniture/bookshelf-tall.png', x: 11, y: 20, w: 48, label: 'Archive shelf left' },
-  { src: '/furniture/bookshelf.png', x: 19, y: 18, w: 48, label: 'Archive shelf center' },
-  { src: '/furniture/bookshelf-tall.png', x: 28, y: 21, w: 48, label: 'Archive shelf right' },
-  { src: '/furniture/board-wide.png', x: 21, y: 11, w: 82, label: 'Document index board' },
-  { src: '/furniture/cabinet.png', x: 31, y: 27, w: 54, label: 'Archive cabinet' },
-  { src: '/furniture/couch-blue.png', x: 18, y: 76, w: 82, label: 'Meeting couch left' },
-  { src: '/furniture/couch-blue.png', x: 31, y: 76, w: 82, label: 'Meeting couch right' },
-  { src: '/furniture/table-orange.png', x: 24, y: 79, w: 56, label: 'Meeting coffee table' },
-  { src: '/furniture/green-board.png', x: 37, y: 64, w: 72, label: 'Planning board' },
-  { src: '/furniture/work-desk.png', x: 56, y: 51, w: 126, label: 'Zoo command desk' },
-  { src: '/furniture/terminal.png', x: 56, y: 45, w: 74, label: 'Zoo primary terminal' },
-  { src: '/furniture/screen-wide.png', x: 47, y: 48, w: 58, label: 'Zoo left screen' },
-  { src: '/furniture/screen-wide.png', x: 65, y: 48, w: 58, label: 'Zoo right screen' },
-  { src: '/furniture/server-small.png', x: 45, y: 57, w: 42, label: 'Zoo node A' },
-  { src: '/furniture/server-small.png', x: 69, y: 57, w: 42, label: 'Zoo node B' },
-  { src: '/furniture/chair-orange.png', x: 56, y: 60, w: 34, label: 'Zoo operator chair' },
-  { src: '/furniture/green-board.png', x: 80, y: 14, w: 96, label: 'Log overview board' },
-  { src: '/furniture/table-orange.png', x: 81, y: 27, w: 54, label: 'Ops control desk' },
-  { src: '/furniture/screen-wide.png', x: 76, y: 29, w: 46, label: 'Ops left monitor' },
-  { src: '/furniture/screen-wide.png', x: 86, y: 29, w: 46, label: 'Ops right monitor' },
-  { src: '/furniture/server-small.png', x: 79, y: 36, w: 40, label: 'Log server A' },
-  { src: '/furniture/server-small.png', x: 85, y: 36, w: 40, label: 'Log server B' },
-  { src: '/furniture/cabinet.png', x: 90, y: 23, w: 48, label: 'Incident drawer' },
+  { src: '/furniture/bookshelf-tall.png', x: 11, y: 20, w: 48, label: 'Archive shelf left', desc: 'Stores historical agent run logs and archives.', status: '94% Full' },
+  { src: '/furniture/bookshelf.png', x: 19, y: 18, w: 48, label: 'Archive shelf center', desc: 'Contains agent policy manuals and documents.', status: 'Nominal' },
+  { src: '/furniture/bookshelf-tall.png', x: 28, y: 21, w: 48, label: 'Archive shelf right', desc: 'Saved memory files and workspace backups.', status: 'Nominal' },
+  { src: '/furniture/board-wide.png', x: 21, y: 11, w: 82, label: 'Document index board', desc: 'Index board for active documentation.', status: 'Updated' },
+  { src: '/furniture/cabinet.png', x: 31, y: 27, w: 54, label: 'Archive cabinet', desc: 'Secure biometric cabinet for credentials.', status: 'Locked' },
+  { src: '/furniture/couch-blue.png', x: 18, y: 76, w: 82, label: 'Meeting couch left', desc: 'Ergonomic cyber lounge sofa for workspace planning.', status: 'Available' },
+  { src: '/furniture/couch-blue.png', x: 31, y: 76, w: 82, label: 'Meeting couch right', desc: 'Ergonomic cyber lounge sofa for workspace planning.', status: 'Available' },
+  { src: '/furniture/table-orange.png', x: 24, y: 79, w: 56, label: 'Meeting coffee table', desc: 'Central coffee table with neon support base.', status: 'Clean' },
+  { src: '/furniture/green-board.png', x: 37, y: 64, w: 72, label: 'Planning board', desc: 'Holographic board showing milestone statistics.', status: 'Nominal' },
+  { src: '/furniture/work-desk.png', x: 56, y: 51, w: 126, label: 'Zoo command desk', desc: 'Central workspace desk for Zoo terminal.', status: 'Nominal' },
+  { src: '/furniture/terminal.png', x: 56, y: 45, w: 74, label: 'Zoo primary terminal', desc: 'Primary CLI client interface to Zoo Computer.', status: 'Online' },
+  { src: '/furniture/screen-wide.png', x: 47, y: 48, w: 58, label: 'Zoo left screen', desc: 'Monitors Zoo Computer CPU/memory health.', status: 'Nominal' },
+  { src: '/furniture/screen-wide.png', x: 65, y: 48, w: 58, label: 'Zoo right screen', desc: 'Displays prompt queue and active states.', status: 'Nominal' },
+  { src: '/furniture/server-small.png', x: 45, y: 57, w: 42, label: 'Zoo node A', desc: 'Calculates active session vector embeddings.', status: 'Active' },
+  { src: '/furniture/server-small.png', x: 69, y: 57, w: 42, label: 'Zoo node B', desc: 'Caches active agent context paths.', status: 'Active' },
+  { src: '/furniture/chair-orange.png', x: 56, y: 60, w: 34, label: 'Zoo operator chair', desc: 'Operator chair with glowing accent lines.', status: 'Empty' },
+  { src: '/furniture/green-board.png', x: 80, y: 14, w: 96, label: 'Log overview board', desc: 'Holographic display showing real-time event logs.', status: 'Nominal' },
+  { src: '/furniture/table-orange.png', x: 81, y: 27, w: 54, label: 'Ops control desk', desc: 'Control desk for operations monitoring.', status: 'Nominal' },
+  { src: '/furniture/screen-wide.png', x: 76, y: 29, w: 46, label: 'Ops left monitor', desc: 'Monitors Vercel API and backend health.', status: 'Nominal' },
+  { src: '/furniture/screen-wide.png', x: 86, y: 29, w: 46, label: 'Ops right monitor', desc: 'Displays system telemetry and telemetry stats.', status: 'Nominal' },
+  { src: '/furniture/server-small.png', x: 79, y: 36, w: 40, label: 'Log server A', desc: 'Aggregates stdout and stderr messages.', status: 'Online' },
+  { src: '/furniture/server-small.png', x: 85, y: 36, w: 40, label: 'Log server B', desc: 'Persists session logs to workspace logs.', status: 'Online' },
+  { src: '/furniture/cabinet.png', x: 90, y: 23, w: 48, label: 'Incident drawer', desc: 'Archive of past runtime crash reports.', status: 'Locked' },
 ] as const
 
 const baseAgents: Agent[] = [
@@ -539,6 +539,216 @@ function getAgentPosition(agent: Agent, task?: Task) {
   }
 }
 
+interface FurnitureItemProps {
+  item: {
+    src: string
+    x: number
+    y: number
+    w: number
+    label: string
+    desc: string
+    status: string
+  }
+}
+
+function FurnitureItem({ item }: FurnitureItemProps) {
+  const { label, desc, status, w } = item
+  const lowerLabel = label.toLowerCase()
+  let svgContent = null
+
+  if (lowerLabel.includes('shelf') || lowerLabel.includes('bookshelf')) {
+    svgContent = (
+      <svg width={w} height={w * 1.25} viewBox="0 0 100 125" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.4))' }}>
+        {/* Left Wall */}
+        <path d="M 5 25 L 18 15 L 18 110 L 5 120 Z" fill="#2d3748" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Back Wall */}
+        <path d="M 18 15 L 82 15 L 82 110 L 18 110 Z" fill="#111827" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Right Wall */}
+        <path d="M 82 15 L 95 25 L 95 120 L 82 110 Z" fill="#1e293b" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Top Plate */}
+        <path d="M 5 25 L 18 15 L 82 15 L 95 25 Z" fill="#4a5568" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Shelf Levels */}
+        <path d="M 18 48 L 82 48 L 95 55 L 5 55 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2" />
+        <path d="M 18 78 L 82 78 L 95 85 L 5 85 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2" />
+        {/* Bottom Plate */}
+        <path d="M 18 110 L 82 110 L 95 117 L 5 117 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Isometric glowing books/files */}
+        <path d="M 24 38 L 30 34 L 30 47 L 24 47 Z" fill="#06b6d4" />
+        <path d="M 34 34 L 42 29 L 42 47 L 34 47 Z" fill="#d946ef" />
+        <path d="M 48 38 L 54 34 L 54 47 L 48 47 Z" fill="#3b82f6" />
+        <path d="M 28 70 L 38 64 L 38 77 L 28 77 Z" fill="#d946ef" />
+        <path d="M 42 72 L 48 68 L 48 77 L 42 77 Z" fill="#10b981" />
+        <path d="M 24 102 L 34 97 L 34 109 L 24 109 Z" fill="#3b82f6" />
+        <path d="M 38 100 L 46 95 L 46 109 L 38 109 Z" fill="#06b6d4" />
+        {/* Glowing aura */}
+        <path d="M 5 25 L 18 15 L 82 15 L 95 25 L 95 120 L 5 120 Z" fill="none" stroke="#8b5cf6" strokeWidth="1" opacity="0.3" filter="drop-shadow(0 0 8px #8b5cf6)" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('board')) {
+    svgContent = (
+      <svg width={w} height={w * 0.75} viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.3))' }}>
+        {/* Hologram Projector Base */}
+        <ellipse cx="60" cy="76" rx="34" ry="8" fill="rgba(16, 185, 129, 0.25)" filter="drop-shadow(0 0 6px #10b981)" />
+        <path d="M 46 76 L 60 48 L 74 76 Z" fill="rgba(16, 185, 129, 0.2)" />
+        {/* Isometric Skewed Glass Panel */}
+        <path d="M 12 18 L 108 6 L 108 58 L 12 70 Z" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth="2.5" />
+        {/* Hologram Details */}
+        <path d="M 24 28 Q 60 20 96 14" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
+        <path d="M 24 45 L 48 39 L 68 42 L 92 32" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="28" cy="55" r="3.5" fill="#10b981" />
+        <circle cx="40" cy="53" r="3.5" fill="#10b981" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('cabinet') || lowerLabel.includes('drawer')) {
+    svgContent = (
+      <svg width={w} height={w * 1.15} viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.45))' }}>
+        {/* Top Face */}
+        <path d="M 10 25 L 50 8 L 90 25 L 50 42 Z" fill="#475569" stroke="#64748b" strokeWidth="2.5" />
+        {/* Left Face */}
+        <path d="M 10 25 L 50 42 L 50 105 L 10 88 Z" fill="#1e293b" stroke="#334155" strokeWidth="2.5" />
+        {/* Right Face */}
+        <path d="M 50 42 L 90 25 L 90 88 L 50 105 Z" fill="#0f172a" stroke="#1e293b" strokeWidth="2.5" />
+        {/* Left Drawers */}
+        <path d="M 16 36 L 44 48 L 44 64 L 16 52 Z" fill="#020617" stroke="#38bdf8" strokeWidth="1.5" />
+        <path d="M 16 60 L 44 72 L 44 88 L 16 76 Z" fill="#020617" stroke="#38bdf8" strokeWidth="1.5" />
+        {/* Biometric Status LED */}
+        <circle cx="30" cy="44" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
+        <circle cx="30" cy="68" r="3" fill="#ef4444" filter="drop-shadow(0 0 4px #ef4444)" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('couch')) {
+    svgContent = (
+      <svg width={w} height={w * 0.7} viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.35))' }}>
+        {/* Left armrest */}
+        <path d="M 10 38 L 32 26 L 32 58 L 10 70 Z" fill="#db2777" stroke="#ec4899" strokeWidth="2.5" />
+        {/* Backrest (skewed) */}
+        <path d="M 32 26 L 98 4 L 98 36 L 32 58 Z" fill="#ec4899" stroke="#f43f5e" strokeWidth="2.5" />
+        {/* Seat Cushions */}
+        <path d="M 32 58 L 98 36 L 110 42 L 44 64 Z" fill="#1e1b4b" stroke="#ec4899" strokeWidth="2" />
+        {/* Right armrest */}
+        <path d="M 98 36 L 118 46 L 118 62 L 98 52 Z" fill="#db2777" stroke="#ec4899" strokeWidth="2.5" />
+        {/* Neon accent piping */}
+        <path d="M 10 56 Q 60 42 108 50" stroke="#f43f5e" strokeWidth="3" filter="drop-shadow(0 0 5px #f43f5e)" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('coffee table')) {
+    svgContent = (
+      <svg width={w} height={w * 0.75} viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.25))' }}>
+        {/* Neon Ring Base */}
+        <ellipse cx="50" cy="58" rx="32" ry="11" stroke="#f43f5e" strokeWidth="3.5" filter="drop-shadow(0 0 6px #f43f5e)" />
+        {/* Supports */}
+        <path d="M 32 26 L 32 56 M 68 26 L 68 56 M 50 26 L 50 59" stroke="#f43f5e" strokeWidth="2.5" />
+        {/* Glass Table Top */}
+        <ellipse cx="50" cy="24" rx="42" ry="14" fill="rgba(244, 63, 94, 0.15)" stroke="#f43f5e" strokeWidth="2.5" />
+        <ellipse cx="50" cy="27" rx="42" ry="14" fill="none" stroke="#f43f5e" strokeWidth="1.5" opacity="0.6" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('desk')) {
+    svgContent = (
+      <svg width={w} height={w * 0.65} viewBox="0 0 180 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.4))' }}>
+        {/* Desk Top Profile */}
+        <path d="M 25 30 L 155 12 L 170 70 L 10 88 Z" fill="#0f172a" stroke="#38bdf8" strokeWidth="3" />
+        {/* Thick Front Edge */}
+        <path d="M 10 88 L 170 70 L 170 76 L 10 94 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" />
+        {/* Desk Support Ends */}
+        <path d="M 10 94 L 10 112 L 25 107 L 25 89 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2.5" />
+        <path d="M 170 76 L 170 94 L 155 99 L 155 81 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2.5" />
+        {/* Glowing underglow */}
+        <path d="M 10 88 L 170 70" stroke="#38bdf8" strokeWidth="3" filter="drop-shadow(0 0 6px #38bdf8)" />
+        {/* Keyboard (skewed/3D) */}
+        <path d="M 68 58 L 120 50 L 116 68 L 64 76 Z" fill="#111827" stroke="#06b6d4" strokeWidth="1.5" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('terminal')) {
+    svgContent = (
+      <svg width={w} height={w * 0.95} viewBox="0 0 120 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.35))' }}>
+        {/* 3D Console Pedestal */}
+        <path d="M 30 78 L 90 62 L 95 88 L 25 104 Z" fill="#0f172a" stroke="#06b6d4" strokeWidth="2.5" />
+        <path d="M 25 104 L 25 112 L 95 96 L 95 88 Z" fill="#1e293b" stroke="#06b6d4" strokeWidth="1.5" />
+        {/* Hologram Emitter Lens */}
+        <ellipse cx="60" cy="80" rx="16" ry="6" fill="#1e293b" stroke="#06b6d4" strokeWidth="1.5" />
+        {/* Floating Hologram Cone */}
+        <path d="M 60 76 L 15 22 L 105 12 Z" fill="rgba(6, 180, 212, 0.07)" />
+        {/* Main Floating Terminal Panel */}
+        <path d="M 18 22 L 102 12 L 97 58 L 13 68 Z" fill="rgba(6, 180, 212, 0.16)" stroke="#06b6d4" strokeWidth="2.5" filter="drop-shadow(0 0 6px #06b6d4)" />
+        <path d="M 28 36 L 76 29 M 28 46 L 66 41" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="82" cy="42" r="5" fill="#06b6d4" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('screen') || lowerLabel.includes('monitor')) {
+    svgContent = (
+      <svg width={w} height={w * 0.85} viewBox="0 0 100 85" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.3))' }}>
+        {/* 3D Angled Support Stand */}
+        <path d="M 44 52 L 56 49 L 52 74 L 40 77 Z" fill="#475569" stroke="#334155" strokeWidth="1.5" />
+        <ellipse cx="46" cy="74" rx="16" ry="5" fill="#334155" />
+        {/* Skewed Panel */}
+        <path d="M 8 16 L 92 6 L 87 52 L 3 62 Z" fill="#020617" stroke="#38bdf8" strokeWidth="2.5" filter="drop-shadow(0 0 4px rgba(56, 189, 248, 0.45))" />
+        {/* Data Waveform */}
+        <path d="M 14 38 C 28 26, 42 48, 56 32 C 68 22, 78 42, 82 36" stroke="#38bdf8" strokeWidth="2" fill="none" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('server')) {
+    svgContent = (
+      <svg width={w} height={w * 1.35} viewBox="0 0 80 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.45))' }}>
+        {/* Top Face */}
+        <path d="M 8 20 L 42 8 L 72 20 L 38 32 Z" fill="#1e293b" stroke="#10b981" strokeWidth="2.5" />
+        {/* Left Front Face */}
+        <path d="M 8 20 L 38 32 L 38 108 L 8 96 Z" fill="#0f172a" stroke="#10b981" strokeWidth="2.5" />
+        {/* Right Side Face */}
+        <path d="M 38 32 L 72 20 L 72 96 L 38 108 Z" fill="#16253b" stroke="#047857" strokeWidth="2.5" />
+        {/* Status Indicators (Isometric Columns) */}
+        <circle cx="18" cy="40" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
+        <circle cx="28" cy="44" r="3" fill="#06b6d4" filter="drop-shadow(0 0 3px #06b6d4)" />
+        
+        <circle cx="18" cy="62" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
+        <circle cx="28" cy="66" r="3" fill="#ef4444" filter="drop-shadow(0 0 3px #ef4444)" />
+
+        <circle cx="18" cy="84" r="3" fill="#06b6d4" filter="drop-shadow(0 0 4px #06b6d4)" />
+        <circle cx="28" cy="88" r="3" fill="#10b981" filter="drop-shadow(0 0 3px #10b981)" />
+      </svg>
+    )
+  } else if (lowerLabel.includes('chair')) {
+    svgContent = (
+      <svg width={w} height={w * 1.35} viewBox="0 0 60 85" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }}>
+        {/* Support Base */}
+        <path d="M 27 52 L 33 50 L 33 72 L 27 74 Z" fill="#475569" />
+        <ellipse cx="30" cy="72" rx="16" ry="5" fill="#334155" />
+        {/* Skewed Seat Cushion */}
+        <path d="M 10 44 L 48 33 L 50 49 L 12 60 Z" fill="#1e293b" stroke="#3b82f6" strokeWidth="2.5" />
+        {/* Skewed Ergonomic Backrest */}
+        <path d="M 12 14 L 46 6 L 48 32 L 14 40 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="2.5" />
+        <line x1="18" y1="20" x2="40" y2="15" stroke="#38bdf8" strokeWidth="2" filter="drop-shadow(0 0 4px #38bdf8)" />
+      </svg>
+    )
+  } else {
+    svgContent = (
+      <svg width={w} height={w} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="10" width="80" height="80" rx="8" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" />
+        <circle cx="50" cy="50" r="10" fill="#38bdf8" />
+      </svg>
+    )
+  }
+
+  return (
+    <div
+      className="furniture-container"
+      style={{
+        left: `${item.x}%`,
+        top: `${item.y}%`,
+      }}
+    >
+      {svgContent}
+      <div className="furniture-info">
+        <strong>{label}</strong>
+        <small>{desc}</small>
+        <div className="furniture-status-pill">
+          <span>{status}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [agents] = useState(baseAgents)
   const [tasks, setTasks] = useState(makeInitialTasks)
@@ -547,6 +757,7 @@ function App() {
   const [requestTitle, setRequestTitle] = useState('')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [, setMetrics] = useState<Metrics>({
     day: 1,
     done: 0,
@@ -1254,65 +1465,32 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Reception</p>
-              <h2>Brief composer</h2>
+              <h2>Active Requests</h2>
             </div>
-            <span className="load-pill">Auto research</span>
+            <button
+              type="button"
+              className="create-task-trigger-btn"
+              onClick={() => setIsCreateTaskOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                border: 'none',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
+                transition: 'all 0.2s',
+                lineHeight: '1.2'
+              }}
+            >
+              + Add task
+            </button>
           </div>
-
-          <form
-            className="reception-card brief-composer"
-            onSubmit={(event) => {
-              event.preventDefault()
-              spawnTask()
-            }}
-          >
-            <label className="intake-field">
-              <span>Task content</span>
-              <textarea
-                value={requestTitle}
-                onChange={(event) => setRequestTitle(event.target.value)}
-                placeholder="Describe the task details..."
-                rows={4}
-              />
-            </label>
-
-            <div className="intake-row">
-              <label className="intake-field">
-                <span>Type</span>
-                <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
-                  {Object.entries(taskLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="intake-field">
-                <span>Priority</span>
-                <select
-                  value={requestPriority}
-                  onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}
-                >
-                  {Object.entries(taskPriorityLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="intake-actions">
-              <button type="submit" className="intake-submit">
-                Create task
-              </button>
-            </div>
-
-            <p className="intake-hint">
-              Every new brief starts with research intake at the Zoo Computer before manual dispatch.
-            </p>
-          </form>
 
           <div className="task-list">
             {queuedTasks.length ? (
@@ -1418,18 +1596,9 @@ function App() {
             )
           })}
           {furniture.map((item) => (
-            <img
-              alt={item.label}
-              className="furniture"
+            <FurnitureItem
               key={`${item.src}-${item.x}-${item.y}`}
-              src={item.src}
-              style={
-                {
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  width: `${item.w}px`,
-                } as React.CSSProperties
-              }
+              item={item}
             />
           ))}
           {Object.entries(stationPositions).map(([id, station]) => (
@@ -2247,6 +2416,88 @@ function App() {
           </div>
         </section>
       ) : null}
+      {isCreateTaskOpen && (
+        <div
+          className="modal-overlay"
+          onClick={() => setIsCreateTaskOpen(false)}
+        >
+          <div
+            className="modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-head">
+              <div>
+                <p className="eyebrow">Reception</p>
+                <h2>Brief composer</h2>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setIsCreateTaskOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form
+              className="reception-card brief-composer"
+              onSubmit={(event) => {
+                event.preventDefault()
+                spawnTask()
+                setIsCreateTaskOpen(false)
+              }}
+            >
+              <label className="intake-field">
+                <span>Task content</span>
+                <textarea
+                  value={requestTitle}
+                  onChange={(event) => setRequestTitle(event.target.value)}
+                  placeholder="Describe the task details..."
+                  rows={4}
+                  autoFocus
+                />
+              </label>
+
+              <div className="intake-row">
+                <label className="intake-field">
+                  <span>Type</span>
+                  <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
+                    {Object.entries(taskLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="intake-field">
+                  <span>Priority</span>
+                  <select
+                    value={requestPriority}
+                    onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}
+                  >
+                    {Object.entries(taskPriorityLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="intake-actions">
+                <button type="submit" className="intake-submit">
+                  Create task
+                </button>
+              </div>
+
+              <p className="intake-hint">
+                Every new brief starts with research intake at the Zoo Computer before manual dispatch.
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
