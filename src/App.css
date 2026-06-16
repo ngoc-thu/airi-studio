@@ -5,6 +5,9 @@
 }
 
 .hud {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 88px;
   display: grid;
   grid-template-columns: minmax(250px, 320px) 1fr auto;
@@ -15,6 +18,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   background: rgba(15, 21, 36, 0.8);
+  background-clip: padding-box;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
 }
 

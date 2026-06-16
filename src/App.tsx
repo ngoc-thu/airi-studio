@@ -331,14 +331,13 @@ const hallwayRoutes: Record<AgentRole, Point[]> = {
 
 const idleRoamRoutes: Record<AgentRole, Point[]> = {
   research: [
-    { x: 12, y: 76 },
-    { x: 16, y: 62 },
-    { x: 20, y: 48 },
-    { x: 16, y: 62 },
+    { x: 21, y: 32 },
+    { x: 16, y: 36 },
+    { x: 26, y: 36 },
   ],
   plan: [
-    { x: 12, y: 76 },
-    { x: 22, y: 76 },
+    { x: 24, y: 76 },
+    { x: 18, y: 76 },
     { x: 30, y: 76 },
     { x: 38, y: 72 },
     { x: 30, y: 76 },
@@ -871,7 +870,7 @@ function App() {
     const agent = agents.find((item) => item.id === session.agentId)
     const followUp = (followUpOverride ?? zoFollowUp).trim()
 
-    if (!task || !agent || !session.conversationId || !followUp) return
+    if (!task || !agent || !session.conversationId || !followUp || session.status === 'working') return
 
     setZoSessions((currentSessions) =>
       currentSessions.map((item) =>
@@ -1156,7 +1155,7 @@ function App() {
 
   function startZooChatTask() {
     const prompt = zooChatPrompt.trim()
-    if (!prompt) return
+    if (!prompt || selectedZoSession?.status === 'working') return
 
     if (selectedZoSession?.conversationId) {
       setZoFollowUp(prompt)
@@ -1851,6 +1850,18 @@ function App() {
                           <div className="progress"><span style={{ width: `${progress}%` }} /></div>
                           <small>{progress}% complete</small>
                         </div>
+                      ) : selected ? (
+                        <button
+                          type="button"
+                          className="assign-button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            assignTask(agent.id)
+                          }}
+                          style={{ marginTop: '10px', height: '34px', width: '100%' }}
+                        >
+                          Assign selected task
+                        </button>
                       ) : null}
                     </article>
                   )
@@ -1993,8 +2004,8 @@ function App() {
                     placeholder={selectedZoSession?.conversationId ? 'Message Zoo Computer...' : 'Ask Zoo Computer anything...'}
                   />
                   <div className="zoo-chat-actions chatgpt-composer-actions">
-                    <button type="submit" className="intake-submit">
-                      {selectedZoSession?.conversationId ? 'Send' : 'Start chat'}
+                    <button type="submit" className="intake-submit" disabled={selectedZoSession?.status === 'working'}>
+                      {selectedZoSession?.status === 'working' ? 'Sending...' : (selectedZoSession?.conversationId ? 'Send' : 'Start chat')}
                     </button>
                   </div>
                 </form>
@@ -2052,10 +2063,10 @@ function App() {
                       <button
                         type="button"
                         className="zo-continue-button"
-                        disabled={!activeZoSession.conversationId || !zoFollowUp.trim()}
+                        disabled={!activeZoSession.conversationId || !zoFollowUp.trim() || activeZoSession.status === 'working'}
                         onClick={() => void continueZoSession(activeZoSession)}
                       >
-                        Continue session
+                        {activeZoSession.status === 'working' ? 'Continuing...' : 'Continue session'}
                       </button>
                     </div>
 
