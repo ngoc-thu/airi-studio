@@ -547,7 +547,7 @@ function App() {
   const [requestTitle, setRequestTitle] = useState('')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
-  const [metrics, setMetrics] = useState<Metrics>({
+  const [, setMetrics] = useState<Metrics>({
     day: 1,
     done: 0,
     failed: 0,
@@ -1183,19 +1183,16 @@ function App() {
     setZooChatPrompt('')
   }
 
-  function endDay() {
-    setMetrics((state) => ({
-      ...state,
-      day: state.day + 1,
-      tokens: state.tokens + 180,
-      happiness: Math.max(20, Math.min(100, state.happiness + (queuedTasks.length > 6 ? -6 : 4))),
-    }))
-    setTasks(makeInitialTasks())
-    setNextTaskId((id) => id + 1)
+  function resetWorkspace() {
+    setTasks([])
+    setNextTaskId(1)
     setSelectedTask(null)
     setSelectedZoTaskId(null)
     setZoSessions([])
-    setLog((items) => [`[SYSTEM] Shift ${metrics.day + 1} started. Budget refreshed and local session state reset.`, ...items].slice(0, 7))
+    setLog([
+      '[SYSTEM] Workspace reset. All tasks and sessions cleared.',
+    ])
+    window.localStorage.clear()
   }
 
 
@@ -1211,16 +1208,22 @@ function App() {
         </div>
 
         <div className="stat-strip" aria-label="Office metrics">
-          <Metric label="Shift" value={metrics.day} />
-          <Metric label="Closed" value={metrics.done} />
-          <Metric label="Blocked" value={metrics.failed} />
-          <Metric label="Capacity" value={metrics.tokens} />
-          <Metric label="Morale" value={`${metrics.happiness}%`} />
-          <Metric label="Budget" value={metrics.credits} />
+          <Metric label="Total Tasks" value={tasks.length} />
+          <Metric label="Active" value={tasks.filter((t) => t.state === 'active').length} />
+          <Metric label="Completed" value={tasks.filter((t) => t.state === 'done').length} />
+          <Metric label="Failed" value={tasks.filter((t) => t.state === 'failed').length} />
         </div>
 
-        <button className="primary-button" onClick={endDay}>
-          Close shift
+        <button
+          className="primary-button"
+          onClick={() => {
+            if (window.confirm('Are you sure you want to reset the workspace? This will delete all tasks and sessions.')) {
+              resetWorkspace()
+            }
+          }}
+          style={{ background: '#ef4444', color: '#ffffff' }}
+        >
+          Reset Workspace
         </button>
       </section>
 
