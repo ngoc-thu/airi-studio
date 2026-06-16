@@ -10,14 +10,14 @@ The current build is centered around three connected experiences:
 
 ## What the current build does
 
-- Create a new task from the Tasks screen
-- Write the task content in a multiline textarea
-- Choose task type and priority
-- Automatically send new tasks to **Zoo Computer** for research intake first
-- Open a dedicated Zoo chat view to continue the conversation
-- See visible feedback when Zoo is working or has just replied
-- Browse task/session history from the interface
-- Watch the office and agent-themed UI update around the current work state
+- **Version 4 Room Style layout**: Elegant bordered panels organizing the office into logical rooms (Files & Docs, Zoo Computer, Log Station, Meeting Area, Zoo Chat, Pet Zone).
+- **Pixel-art furniture rendering**: Real sprite-sheet items (desks, couches, shelves) replacing legacy SVG paths.
+- **Interactive rooms**: Hovering over rooms reveals a clean description panel and glows the room with its respective neon color. Clicking redirects to the corresponding view.
+- **Dynamic furniture highlights**: Hovering over furniture items scales them up and triggers a drop-shadow glow matching the room's color scheme.
+- **Clickable mascot**: Clicking on Tata the cat displays a cute "mew mew" pixel speech bubble.
+- **Cyber-neon buttons**: Beautifully styled "+ Create Task" intake button with glowing neon gradients.
+- Create a new task from the Tasks screen with a multiline textarea, priority, and type selection.
+- Automatically send new tasks to **Zoo Computer** for research intake first and chat directly.
 
 ## Interface overview
 

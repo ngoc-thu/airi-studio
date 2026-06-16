@@ -1,753 +1,45 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
-
-type AgentRole = 'research' | 'plan' | 'code' | 'review'
-type StationId = 'inbox' | 'library' | 'planning' | 'terminal' | 'review'
-type TaskType = AgentRole
-type TaskState = 'queued' | 'active' | 'done' | 'failed'
-
-type TaskPriority = 'low' | 'normal' | 'high'
-
-type TaskSource = 'chat' | 'meeting' | 'system'
-
-type Agent = {
-  id: AgentRole
-  name: string
-  title: string
-  station: StationId
-  speed: number
-  accuracy: number
-  focus: number
-  color: string
-  pet: string
-  petCredit: string
-}
-
-type Task = {
-  id: number
-  label: string
-  type: TaskType
-  priority: TaskPriority
-  source: TaskSource
-  note: string
-  difficulty: number
-  reward: number
-  state: TaskState
-  assignedTo?: AgentRole
-  progress: number
-}
-
-type Metrics = {
-  day: number
-  done: number
-  failed: number
-  tokens: number
-  happiness: number
-  credits: number
-}
-
-type Point = {
-  x: number
-  y: number
-}
-
-type AgentInspect = {
-  agentId: AgentRole
-  tick: number
-}
-
-type ZoSessionStatus = 'pending' | 'sending' | 'working' | 'done' | 'failed'
-
-type ZoInsight = {
-  label: string
-  value: string
-}
-
-type ZoSessionMessage = {
-  id: string
-  role: 'system' | 'user' | 'assistant'
-  title?: string
-  body: string
-}
-
-type ZoSession = {
-  taskId: number
-  taskLabel: string
-  taskType: TaskType
-  agentId: AgentRole
-  status: ZoSessionStatus
-  output: string
-  summary?: string
-  insights?: ZoInsight[]
-  actions?: string[]
-  confidence?: number
-  conversationId?: string | null
-  messages?: ZoSessionMessage[]
-}
-
-const stationPositions: Record<StationId, { x: number; y: number; label: string }> = {
-  inbox: { x: 12, y: 76, label: 'Welcome desk' },
-  library: { x: 21, y: 25, label: 'Files & Docs' },
-  planning: { x: 24, y: 73, label: 'Meeting area' },
-  terminal: { x: 56, y: 58, label: 'Zoo Computer' },
-  review: { x: 82, y: 24, label: 'Log station' },
-}
-
-const dashboardMascots = [
-  {
-    id: 'tata',
-    name: 'Tata',
-    pet: '/pets/tata.webp',
-    petCredit: 'Tata by Codex-Pets.net',
-    x: 36,
-    y: 74,
-    route: [
-      { x: 36, y: 74 },
-      { x: 52, y: 76 },
-      { x: 60, y: 60 },
-      { x: 42, y: 46 },
-      { x: 22, y: 58 },
-    ],
-  },
-] as const
-
-const furniture = [
-  { src: '/furniture/bookshelf-tall.png', x: 11, y: 20, w: 48, label: 'Archive shelf left', desc: 'Stores historical agent run logs and archives.', status: '94% Full' },
-  { src: '/furniture/bookshelf.png', x: 19, y: 18, w: 48, label: 'Archive shelf center', desc: 'Contains agent policy manuals and documents.', status: 'Nominal' },
-  { src: '/furniture/bookshelf-tall.png', x: 28, y: 21, w: 48, label: 'Archive shelf right', desc: 'Saved memory files and workspace backups.', status: 'Nominal' },
-  { src: '/furniture/board-wide.png', x: 21, y: 11, w: 82, label: 'Document index board', desc: 'Index board for active documentation.', status: 'Updated' },
-  { src: '/furniture/cabinet.png', x: 31, y: 27, w: 54, label: 'Archive cabinet', desc: 'Secure biometric cabinet for credentials.', status: 'Locked' },
-  { src: '/furniture/couch-blue.png', x: 18, y: 76, w: 82, label: 'Meeting couch left', desc: 'Ergonomic cyber lounge sofa for workspace planning.', status: 'Available' },
-  { src: '/furniture/couch-blue.png', x: 31, y: 76, w: 82, label: 'Meeting couch right', desc: 'Ergonomic cyber lounge sofa for workspace planning.', status: 'Available' },
-  { src: '/furniture/table-orange.png', x: 24, y: 79, w: 56, label: 'Meeting coffee table', desc: 'Central coffee table with neon support base.', status: 'Clean' },
-  { src: '/furniture/green-board.png', x: 37, y: 64, w: 72, label: 'Planning board', desc: 'Holographic board showing milestone statistics.', status: 'Nominal' },
-  { src: '/furniture/work-desk.png', x: 56, y: 51, w: 126, label: 'Zoo command desk', desc: 'Central workspace desk for Zoo terminal.', status: 'Nominal' },
-  { src: '/furniture/terminal.png', x: 56, y: 45, w: 74, label: 'Zoo primary terminal', desc: 'Primary CLI client interface to Zoo Computer.', status: 'Online' },
-  { src: '/furniture/screen-wide.png', x: 47, y: 48, w: 58, label: 'Zoo left screen', desc: 'Monitors Zoo Computer CPU/memory health.', status: 'Nominal' },
-  { src: '/furniture/screen-wide.png', x: 65, y: 48, w: 58, label: 'Zoo right screen', desc: 'Displays prompt queue and active states.', status: 'Nominal' },
-  { src: '/furniture/server-small.png', x: 45, y: 57, w: 42, label: 'Zoo node A', desc: 'Calculates active session vector embeddings.', status: 'Active' },
-  { src: '/furniture/server-small.png', x: 69, y: 57, w: 42, label: 'Zoo node B', desc: 'Caches active agent context paths.', status: 'Active' },
-  { src: '/furniture/chair-orange.png', x: 56, y: 60, w: 34, label: 'Zoo operator chair', desc: 'Operator chair with glowing accent lines.', status: 'Empty' },
-  { src: '/furniture/green-board.png', x: 80, y: 14, w: 96, label: 'Log overview board', desc: 'Holographic display showing real-time event logs.', status: 'Nominal' },
-  { src: '/furniture/table-orange.png', x: 81, y: 27, w: 54, label: 'Ops control desk', desc: 'Control desk for operations monitoring.', status: 'Nominal' },
-  { src: '/furniture/screen-wide.png', x: 76, y: 29, w: 46, label: 'Ops left monitor', desc: 'Monitors Vercel API and backend health.', status: 'Nominal' },
-  { src: '/furniture/screen-wide.png', x: 86, y: 29, w: 46, label: 'Ops right monitor', desc: 'Displays system telemetry and telemetry stats.', status: 'Nominal' },
-  { src: '/furniture/server-small.png', x: 79, y: 36, w: 40, label: 'Log server A', desc: 'Aggregates stdout and stderr messages.', status: 'Online' },
-  { src: '/furniture/server-small.png', x: 85, y: 36, w: 40, label: 'Log server B', desc: 'Persists session logs to workspace logs.', status: 'Online' },
-  { src: '/furniture/cabinet.png', x: 90, y: 23, w: 48, label: 'Incident drawer', desc: 'Archive of past runtime crash reports.', status: 'Locked' },
-] as const
-
-const baseAgents: Agent[] = [
-  {
-    id: 'research',
-    name: 'Enana',
-    title: 'Researcher',
-    station: 'library',
-    speed: 1.05,
-    accuracy: 88,
-    focus: 92,
-    color: '#5dd6ff',
-    pet: '/pets/enana.webp',
-    petCredit: 'Enana by Codex-Pets.net',
-  },
-  {
-    id: 'plan',
-    name: 'Ace Taffy',
-    title: 'Planner',
-    station: 'planning',
-    speed: 1,
-    accuracy: 86,
-    focus: 84,
-    color: '#ff7aa8',
-    pet: '/pets/ace-taffy.webp',
-    petCredit: 'Ace Taffy by CodexPets.net',
-  },
-  {
-    id: 'code',
-    name: 'Chappy',
-    title: 'Coder',
-    station: 'terminal',
-    speed: 1.18,
-    accuracy: 82,
-    focus: 86,
-    color: '#7cf28a',
-    pet: '/pets/chappy-chan.webp',
-    petCredit: 'Chappy-chan by Codex-Pets.net',
-  },
-  {
-    id: 'review',
-    name: 'Azuma',
-    title: 'Reviewer',
-    station: 'review',
-    speed: 0.92,
-    accuracy: 94,
-    focus: 90,
-    color: '#ffd166',
-    pet: '/pets/azuma.webp',
-    petCredit: 'Azuma by CodexPets.net',
-  },
-]
-
-const taskTemplates: Record<TaskType, string[]> = {
-  research: ['Map unknown API', 'Collect source notes', 'Compare model tradeoffs', 'Summarize user brief'],
-  plan: ['Draft implementation plan', 'Break down feature steps', 'Design work sequence', 'Estimate task scope'],
-  code: ['Build feature slice', 'Patch UI bug', 'Wire game state', 'Refactor task loop'],
-  review: ['Catch regression', 'Audit edge cases', 'Review pull request', 'Test release path'],
-}
-
-const taskLabels: Record<TaskType, string> = {
-  research: 'Research',
-  plan: 'Plan',
-  code: 'Code',
-  review: 'Review',
-}
-
-const taskPriorityLabels: Record<TaskPriority, string> = {
-  low: 'Low',
-  normal: 'Normal',
-  high: 'High',
-}
-
-const taskSourceLabels: Record<TaskSource, string> = {
-  chat: 'Chat',
-  meeting: 'Meeting',
-  system: 'System',
-}
-
-const zoStatusLabels: Record<ZoSessionStatus, string> = {
-  pending: 'Confirm',
-  sending: 'Sending',
-  working: 'Working',
-  done: 'Done',
-  failed: 'Failed',
-}
-
-const roleResultCards: Record<TaskType, { summaryLabel: string; sections: string[] }> = {
-  research: {
-    summaryLabel: 'Research brief',
-    sections: ['Key findings', 'Constraints', 'Open questions'],
-  },
-  plan: {
-    summaryLabel: 'Execution plan',
-    sections: ['Next steps', 'Files / systems', 'Risks'],
-  },
-  code: {
-    summaryLabel: 'Implementation notes',
-    sections: ['Changes', 'Important files', 'Verification'],
-  },
-  review: {
-    summaryLabel: 'Review verdict',
-    sections: ['Issues', 'Edge cases', 'Ship / fix decision'],
-  },
-}
-
-function cleanZoOutput(output: string) {
-  return output.replace(/\r\n/g, '\n').trim()
-}
-
-function makeZoSummary(output: string) {
-  const cleaned = cleanZoOutput(output)
-  const firstLine = cleaned
-    .split('\n')
-    .map((line) => line.replace(/^[-*#\d.\s]+/, '').trim())
-    .find(Boolean)
-
-  if (!firstLine) return 'Zo completed the request.'
-  return firstLine.length > 132 ? `${firstLine.slice(0, 129)}...` : firstLine
-}
-
-function getLatestZoAssistantOutput(session: ZoSession) {
-  const latestAssistantMessage = [...(session.messages ?? [])].reverse().find((message) => message.role === 'assistant')
-  return latestAssistantMessage?.body?.trim() || session.summary || session.output
-}
-
-function extractZoActions(output: string, fallback: string[]) {
-  const cleaned = cleanZoOutput(output)
-  const bulletLines = cleaned
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => /^([-*•]|\d+[.)])\s+/.test(line))
-    .map((line) => line.replace(/^([-*•]|\d+[.)])\s+/, '').trim())
-    .filter(Boolean)
-
-  const candidates = bulletLines.length ? bulletLines : cleaned.split(/[.!?]\s+/).map((line) => line.trim())
-  const actions = candidates.filter(Boolean).slice(0, 3)
-
-  return actions.length ? actions : fallback
-}
-
-function makeZoInsights(task: Task, agent: Agent, output: string): ZoInsight[] {
-  const cleaned = cleanZoOutput(output)
-  const wordCount = cleaned ? cleaned.split(/\s+/).length : 0
-  const fit = agent.id === task.type ? 'Matched role' : 'Cross-role assist'
-
-  return [
-    { label: 'Role fit', value: fit },
-    { label: 'Signal', value: `${wordCount} words` },
-    { label: 'Source', value: 'Zo live' },
-  ]
-}
-
-const agentOffsets: Record<AgentRole, { x: number; y: number }> = {
-  research: { x: -1, y: 12 },
-  plan: { x: -1, y: 6 },
-  code: { x: 0, y: 7 },
-  review: { x: 0, y: 8 },
-}
-
-const workingRows: Record<TaskType, number> = {
-  research: 6,
-  plan: 6,
-  code: 7,
-  review: 8,
-}
-
-const hallwayRoutes: Record<AgentRole, Point[]> = {
-  research: [
-    { x: 12, y: 76 },
-    { x: 16, y: 62 },
-    { x: 20, y: 48 },
-  ],
-  plan: [
-    { x: 12, y: 76 },
-    { x: 26, y: 76 },
-    { x: 36, y: 76 },
-  ],
-  code: [
-    { x: 12, y: 76 },
-    { x: 34, y: 76 },
-    { x: 44, y: 70 },
-    { x: 55, y: 69 },
-  ],
-  review: [
-    { x: 12, y: 76 },
-    { x: 34, y: 76 },
-    { x: 38, y: 66 },
-    { x: 69, y: 66 },
-    { x: 73, y: 45 },
-    { x: 79, y: 38 },
-  ],
-}
-
-const idleRoamRoutes: Record<AgentRole, Point[]> = {
-  research: [
-    { x: 21, y: 32 },
-    { x: 16, y: 36 },
-    { x: 26, y: 36 },
-  ],
-  plan: [
-    { x: 24, y: 76 },
-    { x: 18, y: 76 },
-    { x: 30, y: 76 },
-    { x: 38, y: 72 },
-    { x: 30, y: 76 },
-  ],
-  code: [
-    { x: 34, y: 76 },
-    { x: 44, y: 70 },
-    { x: 55, y: 69 },
-    { x: 48, y: 74 },
-    { x: 40, y: 76 },
-  ],
-  review: [
-    { x: 69, y: 66 },
-    { x: 73, y: 45 },
-    { x: 79, y: 38 },
-    { x: 75, y: 52 },
-    { x: 69, y: 66 },
-  ],
-}
-
-function createTask(
-  id: number,
-  overrides: Partial<Pick<Task, 'label' | 'type' | 'priority' | 'source' | 'note'>> = {},
-): Task {
-  const types: TaskType[] = ['research', 'plan', 'code', 'review']
-  const type = overrides.type ?? types[Math.floor(Math.random() * types.length)]
-  const templates = taskTemplates[type]
-  const priority = overrides.priority ?? (Math.random() > 0.72 ? 'high' : Math.random() > 0.5 ? 'normal' : 'low')
-  const source = overrides.source ?? (Math.random() > 0.6 ? 'meeting' : Math.random() > 0.45 ? 'chat' : 'system')
-  const note = overrides.note ?? 'Waiting for intake review.'
-
-  return {
-    id,
-    label: overrides.label ?? templates[Math.floor(Math.random() * templates.length)],
-    type,
-    priority,
-    source,
-    note,
-    difficulty: 45 + Math.floor(Math.random() * 46),
-    reward: 8 + Math.floor(Math.random() * 10),
-    state: 'queued',
-    progress: 0,
-  }
-}
-
-const STORAGE_KEYS = {
-  tasks: 'airi-studio.tasks',
-  selectedTask: 'airi-studio.selected-task',
-  nextTaskId: 'airi-studio.next-task-id',
-  log: 'airi-studio.log',
-  zoSessions: 'airi-studio.zo-sessions',
-  selectedZoTaskId: 'airi-studio.selected-zo-task-id',
-} as const
-
-function readStoredValue<T>(key: string, fallback: T) {
-  if (typeof window === 'undefined') return fallback
-
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function makeInitialTasks() {
-  return readStoredValue<Task[]>(STORAGE_KEYS.tasks, [])
-}
-
-function makeInitialLog() {
-  return readStoredValue<string[]>(STORAGE_KEYS.log, [
-    '[SYSTEM] Office ready. Waiting for a new task or Zoo chat request.',
-    '[TASK] No active intake yet. Create a task to start the workflow.',
-  ])
-}
-
-function makeInitialZoSessions() {
-  return readStoredValue<ZoSession[]>(STORAGE_KEYS.zoSessions, [])
-}
-
-function makeInitialSelectedTask() {
-  return readStoredValue<number | null>(STORAGE_KEYS.selectedTask, null)
-}
-
-function makeInitialSelectedZoTaskId() {
-  return readStoredValue<number | null>(STORAGE_KEYS.selectedZoTaskId, null)
-}
-
-function makeInitialNextTaskId() {
-  const stored = readStoredValue<number | null>(STORAGE_KEYS.nextTaskId, null)
-  if (typeof stored === 'number' && Number.isFinite(stored) && stored > 0) return stored
-
-  const maxExistingId = makeInitialTasks().reduce((maxId, task) => Math.max(maxId, task.id), 0)
-  return maxExistingId + 1
-}
-
-function priorityRank(priority: TaskPriority) {
-  return priority === 'high' ? 0 : priority === 'normal' ? 1 : 2
-}
-
-function getRoute(agent: Agent) {
-  const offset = agentOffsets[agent.id]
-  const target = stationPositions[agent.station]
-  const targetPoint = { x: target.x + offset.x, y: target.y + offset.y }
-  const route = hallwayRoutes[agent.id] ?? [stationPositions.inbox]
-
-  return [...route.slice(0, -1), targetPoint]
-}
-
-function interpolateRoute(route: Point[], percent: number) {
-  const segments = route.slice(1).map((point, index) => {
-    const start = route[index]
-    const distance = Math.hypot(point.x - start.x, point.y - start.y)
-    return { start, end: point, distance }
-  })
-  const totalDistance = segments.reduce((total, segment) => total + segment.distance, 0)
-  let remainingDistance = totalDistance * percent
-
-  for (const segment of segments) {
-    if (remainingDistance <= segment.distance) {
-      const segmentPercent = segment.distance ? remainingDistance / segment.distance : 1
-      return {
-        x: segment.start.x + (segment.end.x - segment.start.x) * segmentPercent,
-        y: segment.start.y + (segment.end.y - segment.start.y) * segmentPercent,
-        directionX: segment.end.x - segment.start.x,
-      }
-    }
-
-    remainingDistance -= segment.distance
-  }
-
-  const last = route.at(-1) ?? stationPositions.inbox
-  return { x: last.x, y: last.y, directionX: 1 }
-}
-
-function getIdleRoamPosition(agent: Agent) {
-  const roamRoute = idleRoamRoutes[agent.id] ?? [stationPositions[agent.station]]
-  const points = roamRoute.length > 1 ? [...roamRoute, roamRoute[0]] : roamRoute
-  const cycleMs = 36_000 + Object.keys(idleRoamRoutes).indexOf(agent.id) * 2_500
-  const walkWindowMs = 7_000
-  const now = Date.now()
-  const cycleOffset = now % cycleMs
-  const isWalking = cycleOffset < walkWindowMs
-
-  if (!isWalking) {
-    const restPoint = roamRoute[0] ?? stationPositions[agent.station]
-    return {
-      x: restPoint.x,
-      y: restPoint.y,
-      targetX: restPoint.x,
-      targetY: restPoint.y,
-      route: points,
-      walking: false,
-      animationRow: 0,
-      phase: 'Idle',
-    }
-  }
-
-  const rawPercent = cycleOffset / walkWindowMs
-  const current = interpolateRoute(points, rawPercent)
-  const target = points.at(-1) ?? stationPositions[agent.station]
-
-  return {
-    x: current.x,
-    y: current.y,
-    targetX: target.x,
-    targetY: target.y,
-    route: points,
-    walking: rawPercent < 0.98,
-    animationRow: current.directionX >= 0 ? 1 : 2,
-    phase: rawPercent < 0.98 ? 'Roaming' : 'Idle',
-  }
-}
-
-function getAgentPosition(agent: Agent, task?: Task) {
-  const route = getRoute(agent)
-  const target = route.at(-1) ?? stationPositions.inbox
-  const targetX = target.x
-  const targetY = target.y
-
-  if (!task) {
-    return getIdleRoamPosition(agent)
-  }
-
-  const workPercent = Math.min(1, task.progress / task.difficulty)
-  const travelPercent = Math.min(1, workPercent / 0.35)
-  const current = interpolateRoute(route, travelPercent)
-
-  return {
-    x: current.x,
-    y: current.y,
-    targetX,
-    targetY,
-    route,
-    walking: travelPercent < 1,
-    animationRow: travelPercent < 1 ? (current.directionX >= 0 ? 1 : 2) : workingRows[task.type],
-    travelPercent,
-    phase: travelPercent < 1 ? 'Moving' : 'Working',
-  }
-}
-
-interface FurnitureItemProps {
-  item: {
-    src: string
-    x: number
-    y: number
-    w: number
-    label: string
-    desc: string
-    status: string
-  }
-}
-
-function FurnitureItem({ item }: FurnitureItemProps) {
-  const { label, desc, status, w } = item
-  const lowerLabel = label.toLowerCase()
-  let svgContent = null
-
-  if (lowerLabel.includes('shelf') || lowerLabel.includes('bookshelf')) {
-    svgContent = (
-      <svg width={w} height={w * 1.25} viewBox="0 0 100 125" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.4))' }}>
-        {/* Left Wall */}
-        <path d="M 5 25 L 18 15 L 18 110 L 5 120 Z" fill="#2d3748" stroke="#8b5cf6" strokeWidth="2.5" />
-        {/* Back Wall */}
-        <path d="M 18 15 L 82 15 L 82 110 L 18 110 Z" fill="#111827" stroke="#8b5cf6" strokeWidth="2.5" />
-        {/* Right Wall */}
-        <path d="M 82 15 L 95 25 L 95 120 L 82 110 Z" fill="#1e293b" stroke="#8b5cf6" strokeWidth="2.5" />
-        {/* Top Plate */}
-        <path d="M 5 25 L 18 15 L 82 15 L 95 25 Z" fill="#4a5568" stroke="#8b5cf6" strokeWidth="2.5" />
-        {/* Shelf Levels */}
-        <path d="M 18 48 L 82 48 L 95 55 L 5 55 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2" />
-        <path d="M 18 78 L 82 78 L 95 85 L 5 85 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2" />
-        {/* Bottom Plate */}
-        <path d="M 18 110 L 82 110 L 95 117 L 5 117 Z" fill="#1a202c" stroke="#8b5cf6" strokeWidth="2.5" />
-        {/* Isometric glowing books/files */}
-        <path d="M 24 38 L 30 34 L 30 47 L 24 47 Z" fill="#06b6d4" />
-        <path d="M 34 34 L 42 29 L 42 47 L 34 47 Z" fill="#d946ef" />
-        <path d="M 48 38 L 54 34 L 54 47 L 48 47 Z" fill="#3b82f6" />
-        <path d="M 28 70 L 38 64 L 38 77 L 28 77 Z" fill="#d946ef" />
-        <path d="M 42 72 L 48 68 L 48 77 L 42 77 Z" fill="#10b981" />
-        <path d="M 24 102 L 34 97 L 34 109 L 24 109 Z" fill="#3b82f6" />
-        <path d="M 38 100 L 46 95 L 46 109 L 38 109 Z" fill="#06b6d4" />
-        {/* Glowing aura */}
-        <path d="M 5 25 L 18 15 L 82 15 L 95 25 L 95 120 L 5 120 Z" fill="none" stroke="#8b5cf6" strokeWidth="1" opacity="0.3" filter="drop-shadow(0 0 8px #8b5cf6)" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('board')) {
-    svgContent = (
-      <svg width={w} height={w * 0.75} viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.3))' }}>
-        {/* Hologram Projector Base */}
-        <ellipse cx="60" cy="76" rx="34" ry="8" fill="rgba(16, 185, 129, 0.25)" filter="drop-shadow(0 0 6px #10b981)" />
-        <path d="M 46 76 L 60 48 L 74 76 Z" fill="rgba(16, 185, 129, 0.2)" />
-        {/* Isometric Skewed Glass Panel */}
-        <path d="M 12 18 L 108 6 L 108 58 L 12 70 Z" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth="2.5" />
-        {/* Hologram Details */}
-        <path d="M 24 28 Q 60 20 96 14" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
-        <path d="M 24 45 L 48 39 L 68 42 L 92 32" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="28" cy="55" r="3.5" fill="#10b981" />
-        <circle cx="40" cy="53" r="3.5" fill="#10b981" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('cabinet') || lowerLabel.includes('drawer')) {
-    svgContent = (
-      <svg width={w} height={w * 1.15} viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.45))' }}>
-        {/* Top Face */}
-        <path d="M 10 25 L 50 8 L 90 25 L 50 42 Z" fill="#475569" stroke="#64748b" strokeWidth="2.5" />
-        {/* Left Face */}
-        <path d="M 10 25 L 50 42 L 50 105 L 10 88 Z" fill="#1e293b" stroke="#334155" strokeWidth="2.5" />
-        {/* Right Face */}
-        <path d="M 50 42 L 90 25 L 90 88 L 50 105 Z" fill="#0f172a" stroke="#1e293b" strokeWidth="2.5" />
-        {/* Left Drawers */}
-        <path d="M 16 36 L 44 48 L 44 64 L 16 52 Z" fill="#020617" stroke="#38bdf8" strokeWidth="1.5" />
-        <path d="M 16 60 L 44 72 L 44 88 L 16 76 Z" fill="#020617" stroke="#38bdf8" strokeWidth="1.5" />
-        {/* Biometric Status LED */}
-        <circle cx="30" cy="44" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
-        <circle cx="30" cy="68" r="3" fill="#ef4444" filter="drop-shadow(0 0 4px #ef4444)" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('couch')) {
-    svgContent = (
-      <svg width={w} height={w * 0.7} viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.35))' }}>
-        {/* Left armrest */}
-        <path d="M 10 38 L 32 26 L 32 58 L 10 70 Z" fill="#db2777" stroke="#ec4899" strokeWidth="2.5" />
-        {/* Backrest (skewed) */}
-        <path d="M 32 26 L 98 4 L 98 36 L 32 58 Z" fill="#ec4899" stroke="#f43f5e" strokeWidth="2.5" />
-        {/* Seat Cushions */}
-        <path d="M 32 58 L 98 36 L 110 42 L 44 64 Z" fill="#1e1b4b" stroke="#ec4899" strokeWidth="2" />
-        {/* Right armrest */}
-        <path d="M 98 36 L 118 46 L 118 62 L 98 52 Z" fill="#db2777" stroke="#ec4899" strokeWidth="2.5" />
-        {/* Neon accent piping */}
-        <path d="M 10 56 Q 60 42 108 50" stroke="#f43f5e" strokeWidth="3" filter="drop-shadow(0 0 5px #f43f5e)" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('coffee table')) {
-    svgContent = (
-      <svg width={w} height={w * 0.75} viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.25))' }}>
-        {/* Neon Ring Base */}
-        <ellipse cx="50" cy="58" rx="32" ry="11" stroke="#f43f5e" strokeWidth="3.5" filter="drop-shadow(0 0 6px #f43f5e)" />
-        {/* Supports */}
-        <path d="M 32 26 L 32 56 M 68 26 L 68 56 M 50 26 L 50 59" stroke="#f43f5e" strokeWidth="2.5" />
-        {/* Glass Table Top */}
-        <ellipse cx="50" cy="24" rx="42" ry="14" fill="rgba(244, 63, 94, 0.15)" stroke="#f43f5e" strokeWidth="2.5" />
-        <ellipse cx="50" cy="27" rx="42" ry="14" fill="none" stroke="#f43f5e" strokeWidth="1.5" opacity="0.6" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('desk')) {
-    svgContent = (
-      <svg width={w} height={w * 0.65} viewBox="0 0 180 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.4))' }}>
-        {/* Desk Top Profile */}
-        <path d="M 25 30 L 155 12 L 170 70 L 10 88 Z" fill="#0f172a" stroke="#38bdf8" strokeWidth="3" />
-        {/* Thick Front Edge */}
-        <path d="M 10 88 L 170 70 L 170 76 L 10 94 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" />
-        {/* Desk Support Ends */}
-        <path d="M 10 94 L 10 112 L 25 107 L 25 89 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2.5" />
-        <path d="M 170 76 L 170 94 L 155 99 L 155 81 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2.5" />
-        {/* Glowing underglow */}
-        <path d="M 10 88 L 170 70" stroke="#38bdf8" strokeWidth="3" filter="drop-shadow(0 0 6px #38bdf8)" />
-        {/* Keyboard (skewed/3D) */}
-        <path d="M 68 58 L 120 50 L 116 68 L 64 76 Z" fill="#111827" stroke="#06b6d4" strokeWidth="1.5" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('terminal')) {
-    svgContent = (
-      <svg width={w} height={w * 0.95} viewBox="0 0 120 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.35))' }}>
-        {/* 3D Console Pedestal */}
-        <path d="M 30 78 L 90 62 L 95 88 L 25 104 Z" fill="#0f172a" stroke="#06b6d4" strokeWidth="2.5" />
-        <path d="M 25 104 L 25 112 L 95 96 L 95 88 Z" fill="#1e293b" stroke="#06b6d4" strokeWidth="1.5" />
-        {/* Hologram Emitter Lens */}
-        <ellipse cx="60" cy="80" rx="16" ry="6" fill="#1e293b" stroke="#06b6d4" strokeWidth="1.5" />
-        {/* Floating Hologram Cone */}
-        <path d="M 60 76 L 15 22 L 105 12 Z" fill="rgba(6, 180, 212, 0.07)" />
-        {/* Main Floating Terminal Panel */}
-        <path d="M 18 22 L 102 12 L 97 58 L 13 68 Z" fill="rgba(6, 180, 212, 0.16)" stroke="#06b6d4" strokeWidth="2.5" filter="drop-shadow(0 0 6px #06b6d4)" />
-        <path d="M 28 36 L 76 29 M 28 46 L 66 41" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="82" cy="42" r="5" fill="#06b6d4" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('screen') || lowerLabel.includes('monitor')) {
-    svgContent = (
-      <svg width={w} height={w * 0.85} viewBox="0 0 100 85" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.3))' }}>
-        {/* 3D Angled Support Stand */}
-        <path d="M 44 52 L 56 49 L 52 74 L 40 77 Z" fill="#475569" stroke="#334155" strokeWidth="1.5" />
-        <ellipse cx="46" cy="74" rx="16" ry="5" fill="#334155" />
-        {/* Skewed Panel */}
-        <path d="M 8 16 L 92 6 L 87 52 L 3 62 Z" fill="#020617" stroke="#38bdf8" strokeWidth="2.5" filter="drop-shadow(0 0 4px rgba(56, 189, 248, 0.45))" />
-        {/* Data Waveform */}
-        <path d="M 14 38 C 28 26, 42 48, 56 32 C 68 22, 78 42, 82 36" stroke="#38bdf8" strokeWidth="2" fill="none" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('server')) {
-    svgContent = (
-      <svg width={w} height={w * 1.35} viewBox="0 0 80 115" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.45))' }}>
-        {/* Top Face */}
-        <path d="M 8 20 L 42 8 L 72 20 L 38 32 Z" fill="#1e293b" stroke="#10b981" strokeWidth="2.5" />
-        {/* Left Front Face */}
-        <path d="M 8 20 L 38 32 L 38 108 L 8 96 Z" fill="#0f172a" stroke="#10b981" strokeWidth="2.5" />
-        {/* Right Side Face */}
-        <path d="M 38 32 L 72 20 L 72 96 L 38 108 Z" fill="#16253b" stroke="#047857" strokeWidth="2.5" />
-        {/* Status Indicators (Isometric Columns) */}
-        <circle cx="18" cy="40" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
-        <circle cx="28" cy="44" r="3" fill="#06b6d4" filter="drop-shadow(0 0 3px #06b6d4)" />
-        
-        <circle cx="18" cy="62" r="3" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)" />
-        <circle cx="28" cy="66" r="3" fill="#ef4444" filter="drop-shadow(0 0 3px #ef4444)" />
-
-        <circle cx="18" cy="84" r="3" fill="#06b6d4" filter="drop-shadow(0 0 4px #06b6d4)" />
-        <circle cx="28" cy="88" r="3" fill="#10b981" filter="drop-shadow(0 0 3px #10b981)" />
-      </svg>
-    )
-  } else if (lowerLabel.includes('chair')) {
-    svgContent = (
-      <svg width={w} height={w * 1.35} viewBox="0 0 60 85" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }}>
-        {/* Support Base */}
-        <path d="M 27 52 L 33 50 L 33 72 L 27 74 Z" fill="#475569" />
-        <ellipse cx="30" cy="72" rx="16" ry="5" fill="#334155" />
-        {/* Skewed Seat Cushion */}
-        <path d="M 10 44 L 48 33 L 50 49 L 12 60 Z" fill="#1e293b" stroke="#3b82f6" strokeWidth="2.5" />
-        {/* Skewed Ergonomic Backrest */}
-        <path d="M 12 14 L 46 6 L 48 32 L 14 40 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="2.5" />
-        <line x1="18" y1="20" x2="40" y2="15" stroke="#38bdf8" strokeWidth="2" filter="drop-shadow(0 0 4px #38bdf8)" />
-      </svg>
-    )
-  } else {
-    svgContent = (
-      <svg width={w} height={w} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="80" height="80" rx="8" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" />
-        <circle cx="50" cy="50" r="10" fill="#38bdf8" />
-      </svg>
-    )
-  }
-
-  return (
-    <div
-      className="furniture-container"
-      style={{
-        left: `${item.x}%`,
-        top: `${item.y}%`,
-      }}
-    >
-      {svgContent}
-      <div className="furniture-info">
-        <strong>{label}</strong>
-        <small>{desc}</small>
-        <div className="furniture-status-pill">
-          <span>{status}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
+import type {
+  Agent,
+  AgentRole,
+  AgentInspect,
+  Metrics,
+  Task,
+  TaskPriority,
+  TaskType,
+  ZoSession,
+} from './types'
+import {
+  baseAgents,
+  dashboardMascots,
+  furniture,
+  stationPositions,
+  taskLabels,
+  taskPriorityLabels,
+  taskSourceLabels,
+  zoStatusLabels,
+  roleResultCards,
+  STORAGE_KEYS,
+} from './constants'
+import {
+  createTask,
+  getAgentPosition,
+  makeInitialLog,
+  makeInitialNextTaskId,
+  makeInitialSelectedTask,
+  makeInitialSelectedZoTaskId,
+  makeInitialTasks,
+  makeInitialZoSessions,
+  priorityRank,
+  getLatestZoAssistantOutput,
+  makeZoSummary,
+  extractZoActions,
+  makeZoInsights,
+  interpolateRoute,
+} from './helpers'
+import { FurnitureItem } from './components/FurnitureItem'
+import { TaskModal } from './components/TaskModal'
 
 function App() {
   const [agents] = useState(baseAgents)
@@ -757,7 +49,7 @@ function App() {
   const [requestTitle, setRequestTitle] = useState('')
   const [requestType, setRequestType] = useState<TaskType>('plan')
   const [requestPriority, setRequestPriority] = useState<TaskPriority>('high')
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
+  const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [, setMetrics] = useState<Metrics>({
     day: 1,
     done: 0,
@@ -768,15 +60,21 @@ function App() {
   })
   const [log, setLog] = useState<string[]>(makeInitialLog)
   const [mascotTick, setMascotTick] = useState(0)
+  const [mascotBubble, setMascotBubble] = useState<{ [id: string]: boolean }>({})
   const [inspectedAgent, setInspectedAgent] = useState<AgentInspect | null>(null)
   const [selectedAgentId, setSelectedAgentId] = useState<AgentRole | null>(null)
   const [zoSessions, setZoSessions] = useState<ZoSession[]>(makeInitialZoSessions)
   const [selectedZoTaskId, setSelectedZoTaskId] = useState<number | null>(makeInitialSelectedZoTaskId)
   const [zoFollowUp, setZoFollowUp] = useState('Continue the research with next steps and unresolved questions.')
   const [zooChatPrompt, setZooChatPrompt] = useState('')
-  const [taskView, setTaskView] = useState<'brief' | 'zoo-chat'>('brief')
   const [screen, setScreen] = useState<'dashboard' | 'tasks' | 'chat' | 'sessions' | 'documents' | 'logs'>('dashboard')
   const [chatSignal, setChatSignal] = useState<'idle' | 'working' | 'received'>('idle')
+  const handleMascotClick = (id: string) => {
+    setMascotBubble((prev) => ({ ...prev, [id]: true }))
+    setTimeout(() => {
+      setMascotBubble((prev) => ({ ...prev, [id]: false }))
+    }, 2500)
+  }
   const lastAssistantMessageIdRef = useRef<string | null>(null)
   const chatThreadRef = useRef<HTMLDivElement | null>(null)
 
@@ -1340,6 +638,7 @@ function App() {
     void sendTaskToResearch(task)
     setRequestTitle('')
     setRequestPriority('normal')
+    setIsComposerOpen(false)
   }
 
   function deleteTask(taskId: number) {
@@ -1465,30 +764,10 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Reception</p>
-              <h2>Active Requests</h2>
+              <h2>Intake Tasks</h2>
             </div>
-            <button
-              type="button"
-              className="create-task-trigger-btn"
-              onClick={() => setIsCreateTaskOpen(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                border: 'none',
-                borderRadius: '6px',
-                color: '#fff',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
-                transition: 'all 0.2s',
-                lineHeight: '1.2'
-              }}
-            >
-              + Add task
+            <button className="add-task-btn" onClick={() => setIsComposerOpen(true)}>
+              + Create Task
             </button>
           </div>
 
@@ -1559,6 +838,9 @@ function App() {
 
         <section className="office">
           <div className="room-grid" />
+
+
+
           <svg className="movement-routes" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
             {activeTasks.map((task) => {
               const agent = agents.find((item) => item.id === task.assignedTo)
@@ -1595,12 +877,47 @@ function App() {
               />
             )
           })}
-          {furniture.map((item) => (
-            <FurnitureItem
-              key={`${item.src}-${item.x}-${item.y}`}
-              item={item}
-            />
-          ))}
+          {furniture.map((item) => {
+            const lowerLabel = item.label.toLowerCase()
+            let targetScreen: 'tasks' | 'chat' | 'documents' | 'logs' | null = null
+            if (
+              lowerLabel.includes('shelf') || lowerLabel.includes('bookshelf') ||
+              lowerLabel.includes('cabinet') || lowerLabel.includes('index') ||
+              lowerLabel.includes('drawer') || lowerLabel.includes('document') ||
+              lowerLabel.includes('reference') || lowerLabel.includes('research chair')
+            ) {
+              targetScreen = 'documents'
+            } else if (
+              lowerLabel.includes('couch') || lowerLabel.includes('coffee table') ||
+              lowerLabel.includes('planning board')
+            ) {
+              targetScreen = 'tasks'
+            } else if (
+              lowerLabel.includes('zoo left screen') || lowerLabel.includes('zoo center screen') ||
+              lowerLabel.includes('zoo right screen') || lowerLabel.includes('zoo command') ||
+              lowerLabel.includes('zoo primary terminal') || lowerLabel.includes('zoo node') ||
+              lowerLabel.includes('zoo operator chair') ||
+              lowerLabel.includes('zoo chat') || lowerLabel.includes('chat display') ||
+              lowerLabel.includes('chat terminal') || lowerLabel.includes('chat desk') ||
+              lowerLabel.includes('chat node') || lowerLabel.includes('chat operator')
+            ) {
+              targetScreen = 'chat'
+            } else if (
+              lowerLabel.includes('log overview') || lowerLabel.includes('ops control') ||
+              lowerLabel.includes('ops left') || lowerLabel.includes('ops right') ||
+              lowerLabel.includes('log server')
+            ) {
+              targetScreen = 'logs'
+            }
+
+            return (
+              <FurnitureItem
+                key={`${item.src}-${item.x}-${item.y}`}
+                item={item}
+                onClick={targetScreen ? () => setScreen(targetScreen) : undefined}
+              />
+            )
+          })}
           {Object.entries(stationPositions).map(([id, station]) => (
             <div
               className={`station ${id}`}
@@ -1611,108 +928,88 @@ function App() {
             </div>
           ))}
 
-          <button type="button" className="office-area area-meeting" onClick={() => setScreen('tasks')}>
-            <span className="office-area-label">Meeting area</span>
-            <span className="office-area-info">
-              <strong>Meeting & planning</strong>
+          {/* === VERSION 4: ROOM PANELS === */}
+
+          {/* Files & Docs Room */}
+          <button type="button" className="office-room room-docs" onClick={() => setScreen('documents')}>
+            <span className="office-room-header">Files &amp; Docs</span>
+            <span className="office-room-info">
+              <strong>Files &amp; Docs</strong>
+              <small>Browse files, research briefs, saved notes, and reference materials from Zoo Computer.</small>
+              <em>Open Files &amp; Docs screen</em>
+            </span>
+          </button>
+
+          {/* Zoo Computer Room */}
+          <button type="button" className="office-room room-zoo" onClick={() => { setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null); setScreen('chat') }}>
+            <span className="office-room-header">Zoo Computer</span>
+            <span className="office-room-info">
+              <strong>Zoo Computer</strong>
+              <small>Connect directly to Zoo Computer and talk through research in a dedicated chat workspace.</small>
+              <em>Open Chat screen</em>
+            </span>
+          </button>
+
+          {/* Log Station Room */}
+          <button type="button" className="office-room room-logs" onClick={() => setScreen('logs')}>
+            <span className="office-room-header">Log Station</span>
+            <span className="office-room-info">
+              <strong>Log Station</strong>
+              <small>Monitor recent events, dispatch history, and system-level office activity.</small>
+              <em>Open System log</em>
+            </span>
+          </button>
+
+          {/* Meeting Area Room */}
+          <button type="button" className="office-room room-meeting" onClick={() => setScreen('tasks')}>
+            <span className="office-room-header">Meeting Area</span>
+            <span className="office-room-info">
+              <strong>Meeting &amp; planning</strong>
               <small>Discuss tasks, review queue, and organize the next work pass.</small>
               <em>Open Tasks screen</em>
             </span>
           </button>
 
+          {/* ZOO CORE Corridor */}
+          <div className="office-room room-core">
+            <span className="office-room-header">ZOO CORE</span>
+            <svg className="zoo-core-cube" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 4 L38 13 L38 31 L22 40 L6 31 L6 13 Z" fill="rgba(0,240,255,0.08)" stroke="#00f0ff" strokeWidth="1.5"/>
+              <path d="M22 4 L22 40" stroke="#00f0ff" strokeWidth="0.8" opacity="0.4"/>
+              <path d="M6 13 L38 13" stroke="#00f0ff" strokeWidth="0.8" opacity="0.4"/>
+              <circle cx="22" cy="22" r="5" fill="#00f0ff" opacity="0.9"/>
+            </svg>
+            <div className="zoo-core-stair">
+              <span /><span /><span /><span />
+            </div>
+          </div>
+
+          {/* Zoo Chat Room */}
           <button
             type="button"
-            className="office-area area-zoo"
+            className="office-room room-chat"
             onClick={() => {
               setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)
               setScreen('chat')
             }}
           >
-            <span className="office-area-label">Zoo Computer</span>
-            <span className="office-area-info">
-              <strong>Zoo terminal</strong>
-              <small>Connect directly to Zoo Computer and talk through research in a dedicated chat workspace.</small>
-              <em>Open Chat screen</em>
-            </span>
-            <span
-              className={[
-                'zoo-computer',
-                zoSessions.some((session) => session.status === 'sending' || session.status === 'working')
-                  ? 'online'
-                  : '',
-              ].filter(Boolean).join(' ')}
-              style={
-                {
-                  '--zoo-color': selectedZoSession
-                    ? agents.find((agent) => agent.id === selectedZoSession.agentId)?.color
-                    : '#79e7c5',
-                } as React.CSSProperties
-              }
-            >
-              <span className="zoo-screen">
-                <strong>ZO</strong>
-                <small>{selectedZoSession ? zoStatusLabels[selectedZoSession.status] : 'Ready'}</small>
-              </span>
-              <span className="zoo-keyboard" />
-            </span>
-          </button>
-
-          <button type="button" className="office-area area-docs" onClick={() => setScreen('documents')}>
-            <span className="office-area-label">Files & Docs</span>
-            <span className="office-area-info">
-              <strong>Stored files and references</strong>
-              <small>Browse files, research briefs, saved notes, and reference materials from Zoo Computer.</small>
-              <em>Open Files & Docs screen</em>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className="office-area area-zoo-chat"
-            onClick={() => {
-              setTaskView('zoo-chat')
-              setSelectedZoTaskId(visibleZoSessions[0]?.taskId ?? null)
-              setScreen('chat')
-            }}
-          >
-            <span className="office-area-label">Zoo chat</span>
-            <span className="office-area-info">
+            <span className="office-room-header">Zoo Chat</span>
+            <span className="office-room-info">
               <strong>Talk to Zoo directly</strong>
               <small>Open a direct conversation workspace for Zoo Computer with a dedicated chat tab.</small>
               <em>Open Chat · Zoo computer</em>
             </span>
-            <span
-              className={[
-                'zoo-computer',
-                'zoo-computer-dashboard-chat',
-                activeZoSession && (activeZoSession.status === 'sending' || activeZoSession.status === 'working')
-                  ? 'online'
-                  : '',
-              ].filter(Boolean).join(' ')}
-              style={
-                {
-                  '--zoo-color': activeZoSession
-                    ? agents.find((agent) => agent.id === activeZoSession.agentId)?.color
-                    : '#79e7c5',
-                } as React.CSSProperties
-              }
-            >
-              <span className="zoo-screen">
-                <strong>ZO</strong>
-                <small>{activeZoSession ? zoStatusLabels[activeZoSession.status] : 'Ready'}</small>
-              </span>
-              <span className="zoo-keyboard" />
-            </span>
           </button>
 
-          <button type="button" className="office-area area-logs" onClick={() => setScreen('logs')}>
-            <span className="office-area-label">Log station</span>
-            <span className="office-area-info">
-              <strong>Operations log</strong>
-              <small>Monitor recent events, dispatch history, and system-level office activity.</small>
-              <em>Open System log</em>
+          {/* Pet Zone Room */}
+          <div className="office-room room-pets">
+            <span className="office-room-header">Pet Zone</span>
+            <span className="office-room-info">
+              <strong>Pet Zone</strong>
+              <small>Tata's resting area and mascot play zone. Safe space for local pets.</small>
+              <em>Relaxation Area</em>
             </span>
-          </button>
+          </div>
 
           {dashboardMascots.map((mascot) => {
             const loopRoute = [...mascot.route, mascot.route[0]]
@@ -1723,9 +1020,13 @@ function App() {
             return (
               <div
                 key={mascot.id}
-                className="dashboard-mascot"
-                style={{ left: `${current.x}%`, top: `${current.y}%` } as React.CSSProperties}
+                className="dashboard-mascot clickable"
+                style={{ left: `${current.x}%`, top: `${current.y}%`, cursor: 'pointer' } as React.CSSProperties}
+                onClick={() => handleMascotClick(mascot.id)}
               >
+                {mascotBubble[mascot.id] && (
+                  <div className="mascot-speech-bubble">mew mew</div>
+                )}
                 <div
                   aria-label={mascot.petCredit}
                   className="dashboard-mascot-sprite"
@@ -1834,77 +1135,16 @@ function App() {
           </div>
 
           <div className="tasks-screen-grid">
-            <section className="menu-card task-composer-card">
-              <div className="panel-head compact">
-                <div>
-                  <p className="eyebrow">Task intake</p>
-                  <h3>{taskView === 'zoo-chat' ? 'Direct chat with Zoo Computer' : 'Create task in Tasks tab'}</h3>
+            <section className="menu-card task-composer-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+              <div className="panel-head compact" style={{ marginBottom: '16px' }}>
+                <div style={{ textAlign: 'center', margin: '0 auto' }}>
+                  <p className="eyebrow" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#ff7aa8' }}>Task Intake</p>
+                  <h3 style={{ margin: '8px 0 0 0', fontSize: '1.25rem', color: '#fff' }}>Ready to dispatch new work?</h3>
                 </div>
               </div>
-
-              <div className="control-tabs">
-                <button type="button" className="active">
-                  Brief composer
-                </button>
-                <button type="button" onClick={() => setScreen('chat')}>
-                  Open chat
-                </button>
-                <button type="button" onClick={() => setScreen('sessions')}>
-                  Open sessions
-                </button>
-              </div>
-
-              <form
-                className="reception-card brief-composer task-tab-composer"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  spawnTask()
-                }}
-              >
-                <label className="intake-field">
-                  <span>Task content</span>
-                  <textarea
-                    value={requestTitle}
-                    onChange={(event) => setRequestTitle(event.target.value)}
-                    placeholder="Describe the task details..."
-                    rows={4}
-                  />
-                </label>
-
-                <div className="intake-row">
-                  <label className="intake-field">
-                    <span>Type</span>
-                    <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
-                      {Object.entries(taskLabels).map(([value, label]) => (
-                        <option key={`tasks-tab-type-${value}`} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="intake-field">
-                    <span>Priority</span>
-                    <select value={requestPriority} onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}>
-                      {Object.entries(taskPriorityLabels).map(([value, label]) => (
-                        <option key={`tasks-tab-priority-${value}`} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <div className="intake-actions">
-                  <button type="submit" className="intake-submit">
-                    Create task
-                  </button>
-                </div>
-
-                <p className="intake-hint">
-                  Tasks created here use the same auto-research flow as the Dashboard composer.
-                </p>
-              </form>
+              <button type="button" className="add-task-btn" onClick={() => setIsComposerOpen(true)}>
+                + Create Task
+              </button>
             </section>
 
             <section className="menu-card">
@@ -2416,88 +1656,23 @@ function App() {
           </div>
         </section>
       ) : null}
-      {isCreateTaskOpen && (
-        <div
-          className="modal-overlay"
-          onClick={() => setIsCreateTaskOpen(false)}
-        >
-          <div
-            className="modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-head">
-              <div>
-                <p className="eyebrow">Reception</p>
-                <h2>Brief composer</h2>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setIsCreateTaskOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
 
-            <form
-              className="reception-card brief-composer"
-              onSubmit={(event) => {
-                event.preventDefault()
-                spawnTask()
-                setIsCreateTaskOpen(false)
-              }}
-            >
-              <label className="intake-field">
-                <span>Task content</span>
-                <textarea
-                  value={requestTitle}
-                  onChange={(event) => setRequestTitle(event.target.value)}
-                  placeholder="Describe the task details..."
-                  rows={4}
-                  autoFocus
-                />
-              </label>
-
-              <div className="intake-row">
-                <label className="intake-field">
-                  <span>Type</span>
-                  <select value={requestType} onChange={(event) => setRequestType(event.target.value as TaskType)}>
-                    {Object.entries(taskLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="intake-field">
-                  <span>Priority</span>
-                  <select
-                    value={requestPriority}
-                    onChange={(event) => setRequestPriority(event.target.value as TaskPriority)}
-                  >
-                    {Object.entries(taskPriorityLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="intake-actions">
-                <button type="submit" className="intake-submit">
-                  Create task
-                </button>
-              </div>
-
-              <p className="intake-hint">
-                Every new brief starts with research intake at the Zoo Computer before manual dispatch.
-              </p>
-            </form>
-          </div>
-        </div>
-      )}
+      <TaskModal
+        isOpen={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+        onSubmit={(e) => {
+          e.preventDefault()
+          spawnTask()
+        }}
+        requestTitle={requestTitle}
+        setRequestTitle={setRequestTitle}
+        requestType={requestType}
+        setRequestType={setRequestType}
+        requestPriority={requestPriority}
+        setRequestPriority={setRequestPriority}
+        taskLabels={taskLabels}
+        taskPriorityLabels={taskPriorityLabels}
+      />
     </main>
   )
 }
