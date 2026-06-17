@@ -171,7 +171,7 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 310px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 16px;
   align-items: start;
   max-width: 1760px;
@@ -180,6 +180,47 @@ h2 {
 
 .workspace > * {
   min-width: 0;
+}
+
+.task-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: max-content;
+}
+
+.panel-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  border-radius: 12px;
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.07);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.panel-toggle-btn:hover {
+  background: rgba(110, 231, 183, 0.14);
+  border-color: #6ee7b7;
+  box-shadow: 0 4px 20px rgba(110, 231, 183, 0.12);
+}
+
+.panel-toggle-btn span:first-child {
+  font-size: 10px;
+}
+
+.task-panel {
+  width: 310px;
 }
 
 .panel {
@@ -421,6 +462,43 @@ h2 {
   opacity: 0.36;
 }
 
+.dispatch-toggle-btn {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  border-radius: 10px;
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.08);
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(110, 231, 183, 0.05);
+}
+
+.dispatch-toggle-btn:hover:not(:disabled) {
+  background: rgba(110, 231, 183, 0.16);
+  border-color: #6ee7b7;
+  box-shadow: 0 4px 16px rgba(110, 231, 183, 0.12);
+}
+
+.dispatch-toggle-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.dispatch-toggle-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #8d98aa;
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .office {
   position: relative;
   overflow: hidden;
@@ -431,9 +509,9 @@ h2 {
     url("/furniture/wall-tile.png"),
     #20283a;
   background-size: auto, 32px 32px, auto;
-  aspect-ratio: 16 / 10.6;
+  aspect-ratio: unset;
   min-height: 700px;
-  max-height: 900px;
+  height: calc(100vh - 180px);
   box-shadow: 0 22px 56px rgba(0, 0, 0, 0.28);
   image-rendering: pixelated;
 }

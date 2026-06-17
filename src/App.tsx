@@ -70,6 +70,8 @@ function App() {
   const [screen, setScreen] = useState<'dashboard' | 'tasks' | 'chat' | 'sessions' | 'documents' | 'logs'>('dashboard')
   const [chatSignal, setChatSignal] = useState<'idle' | 'working' | 'received'>('idle')
   const [isKvLoaded, setIsKvLoaded] = useState(false)
+  const [isDispatchExpanded, setIsDispatchExpanded] = useState(false)
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
   const handleMascotClick = (id: string) => {
     setMascotBubble((prev) => ({ ...prev, [id]: true }))
     setTimeout(() => {
@@ -201,6 +203,10 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.selectedZoTaskId, JSON.stringify(selectedZoTaskId))
   }, [selectedZoTaskId])
+
+  useEffect(() => {
+    setIsDispatchExpanded(false)
+  }, [selectedTask])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -813,7 +819,20 @@ function App() {
 
       {screen === 'dashboard' ? (
       <section className="workspace">
-        <aside className="panel task-panel">
+        <div className="task-panel-wrapper">
+          <button
+            type="button"
+            className="panel-toggle-btn"
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+            aria-expanded={isPanelOpen}
+            aria-label="Toggle reception panel"
+          >
+            <span>{isPanelOpen ? '◀' : '▶'}</span>
+            <span>{isPanelOpen ? 'Hide' : 'Reception'}</span>
+          </button>
+
+          {isPanelOpen && (
+          <aside className="panel task-panel">
           <div className="panel-head">
             <div>
               <p className="eyebrow">Reception</p>
@@ -856,38 +875,51 @@ function App() {
           <div className="assignment-box">
             <div className="assignment-box-head">
               <p className="eyebrow">Dispatch</p>
-              <button
-                type="button"
-                className="danger-button"
-                disabled={!selected}
-                onClick={() => {
-                  if (!selected) return
-                  const confirmed = window.confirm(`Delete task "${selected.label}"? This will also remove its Zoo session.`)
-                  if (!confirmed) return
-                  deleteTask(selected.id)
-                }}
-              >
-                Delete task
-              </button>
+              {selected && (
+                <button
+                  type="button"
+                  className="danger-button"
+                  onClick={() => {
+                    const confirmed = window.confirm(`Delete task "${selected.label}"? This will also remove its Zoo session.`)
+                    if (!confirmed) return
+                    deleteTask(selected.id)
+                  }}
+                >
+                  Delete task
+                </button>
+              )}
             </div>
             <strong>{selected ? selected.label : 'Select a researched request'}</strong>
-            <p className="queue-hint">
-              New briefs now research first through Zoo Computer, then you can dispatch the task to the right agent.
-            </p>
-            <div className="assign-grid">
-              {agents.map((agent) => (
-                <button
-                  key={agent.id}
-                  disabled={!selected}
-                  onClick={() => assignTask(agent.id)}
-                  style={{ '--agent-color': agent.color } as React.CSSProperties}
-                >
-                  {agent.title}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              className="dispatch-toggle-btn"
+              disabled={!selected}
+              onClick={() => setIsDispatchExpanded(!isDispatchExpanded)}
+            >
+              {isDispatchExpanded ? 'Hide Dispatch Options ▲' : 'Dispatch Task... ▼'}
+            </button>
+            {isDispatchExpanded && selected && (
+              <div className="dispatch-details" style={{ marginTop: '12px' }}>
+                <p className="queue-hint">
+                  New briefs now research first through Zoo Computer, then you can dispatch the task to the right agent.
+                </p>
+                <div className="assign-grid">
+                  {agents.map((agent) => (
+                    <button
+                      key={agent.id}
+                      onClick={() => assignTask(agent.id)}
+                      style={{ '--agent-color': agent.color } as React.CSSProperties}
+                    >
+                      {agent.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </aside>
+          </aside>
+          )}
+        </div>
 
         <section className="office">
           <div className="room-grid" />
