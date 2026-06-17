@@ -69,6 +69,7 @@ function App() {
   const [zooChatPrompt, setZooChatPrompt] = useState('')
   const [screen, setScreen] = useState<'dashboard' | 'tasks' | 'chat' | 'sessions' | 'documents' | 'logs'>('dashboard')
   const [chatSignal, setChatSignal] = useState<'idle' | 'working' | 'received'>('idle')
+  const [isKvLoaded, setIsKvLoaded] = useState(false)
   const handleMascotClick = (id: string) => {
     setMascotBubble((prev) => ({ ...prev, [id]: true }))
     setTimeout(() => {
@@ -116,6 +117,58 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.zoSessions, JSON.stringify(zoSessions))
   }, [zoSessions])
+
+  // Vercel KV: Asynchronously load initial state from server on mount
+  useEffect(() => {
+    async function loadServerState() {
+      try {
+        const response = await fetch('/api/state')
+        if (response.ok) {
+          const data = await response.json()
+          if (data && data.state) {
+            const { tasks: sTasks, zoSessions: sSessions, log: sLog, nextTaskId: sNextTaskId } = data.state
+            if (sTasks) setTasks(sTasks)
+            if (sSessions) setZoSessions(sSessions)
+            if (sLog) setLog(sLog)
+            if (sNextTaskId) setNextTaskId(sNextTaskId)
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load state from Vercel KV, falling back to localStorage:', err)
+      } finally {
+        setIsKvLoaded(true)
+      }
+    }
+    loadServerState()
+  }, [])
+
+  // Vercel KV: Debounced autosave state to server on updates
+  useEffect(() => {
+    if (!isKvLoaded) return
+
+    const timer = setTimeout(async () => {
+      try {
+        await fetch('/api/state', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            state: {
+              tasks,
+              zoSessions,
+              log,
+              nextTaskId,
+            },
+          }),
+        })
+      } catch (err) {
+        console.error('Failed to sync state to Vercel KV:', err)
+      }
+    }, 1500)
+
+    return () => clearTimeout(timer)
+  }, [tasks, zoSessions, log, nextTaskId, isKvLoaded])
 
   useEffect(() => {
     const session = selectedZoSession
